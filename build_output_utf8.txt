@@ -1,0 +1,16 @@
+﻿  Determinando los proyectos que se van a restaurar...
+  Todos los proyectos est├ín actualizados para la restauraci├│n.
+  Turnos.Core -> C:\Users\Julio\Desktop\Turnos\Turnos.Core\bin\Debug\net10.0\Turnos.Core.dll
+  Turnos.Infrastructure -> C:\Users\Julio\Desktop\Turnos\Turnos.Infrastructure\bin\Debug\net10.0\Turnos.Infrastructure.dll
+  Turnos.Services -> C:\Users\Julio\Desktop\Turnos\Turnos.Services\bin\Debug\net10.0\Turnos.Services.dll
+C:\Users\Julio\Desktop\Turnos\Turnos.API\Controllers\AppointmentsController.cs(85,95): error CS1061: "UpdateProfessionalSettingsRequest" no contiene una definici├│n para "AppointmentDuration" ni un m├⌐todo de extensi├│n accesible "AppointmentDuration" que acepte un primer argumento del tipo "UpdateProfessionalSettingsRequest" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\Julio\Desktop\Turnos\Turnos.API\Turnos.API.csproj]
+C:\Users\Julio\Desktop\Turnos\Turnos.API\Controllers\UsersController.cs(152,31): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Users\Julio\Desktop\Turnos\Turnos.API\Turnos.API.csproj]
+
+ERROR al compilar.
+
+C:\Users\Julio\Desktop\Turnos\Turnos.API\Controllers\UsersController.cs(152,31): warning CS8602: Desreferencia de una referencia posiblemente NULL. [C:\Users\Julio\Desktop\Turnos\Turnos.API\Turnos.API.csproj]
+C:\Users\Julio\Desktop\Turnos\Turnos.API\Controllers\AppointmentsController.cs(85,95): error CS1061: "UpdateProfessionalSettingsRequest" no contiene una definici├│n para "AppointmentDuration" ni un m├⌐todo de extensi├│n accesible "AppointmentDuration" que acepte un primer argumento del tipo "UpdateProfessionalSettingsRequest" (┬┐falta alguna directiva using o una referencia de ensamblado?) [C:\Users\Julio\Desktop\Turnos\Turnos.API\Turnos.API.csproj]
+    1 Advertencia(s)
+    1 Errores
+
+Tiempo transcurrido 00:00:01.41

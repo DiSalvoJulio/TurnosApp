@@ -1,0 +1,67 @@
+﻿Using launch settings from C:\Users\Julio\Desktop\Turnos\Turnos.API\Properties\launchSettings.json...
+Building...
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: Found conflicts between different versions of "Microsoft.EntityFrameworkCore.Relational" that could not be resolved. [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277: There was a conflict between "Microsoft.EntityFrameworkCore.Relational, Version=10.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" and "Microsoft.EntityFrameworkCore.Relational, Version=10.0.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60". [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     "Microsoft.EntityFrameworkCore.Relational, Version=10.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" was chosen because it was primary and "Microsoft.EntityFrameworkCore.Relational, Version=10.0.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" was not. [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     References which depend on "Microsoft.EntityFrameworkCore.Relational, Version=10.0.4.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" [C:\Users\Julio\.nuget\packages\microsoft.entityframeworkcore.relational\10.0.4\lib\net10.0\Microsoft.EntityFrameworkCore.Relational.dll]. [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\Julio\.nuget\packages\microsoft.entityframeworkcore.relational\10.0.4\lib\net10.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Project file item includes which caused reference "C:\Users\Julio\.nuget\packages\microsoft.entityframeworkcore.relational\10.0.4\lib\net10.0\Microsoft.EntityFrameworkCore.Relational.dll". [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\Julio\.nuget\packages\microsoft.entityframeworkcore.relational\10.0.4\lib\net10.0\Microsoft.EntityFrameworkCore.Relational.dll [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:     References which depend on or have been unified to "Microsoft.EntityFrameworkCore.Relational, Version=10.0.5.0, Culture=neutral, PublicKeyToken=adb9793829ddae60" []. [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:         C:\Users\Julio\Desktop\Turnos\Turnos.Infrastructure\bin\Debug\net10.0\Turnos.Infrastructure.dll [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:           Project file item includes which caused reference "C:\Users\Julio\Desktop\Turnos\Turnos.Infrastructure\bin\Debug\net10.0\Turnos.Infrastructure.dll". [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+C:\Program Files\dotnet\sdk\10.0.104\Microsoft.Common.CurrentVersion.targets(2437,5): warning MSB3277:             C:\Users\Julio\Desktop\Turnos\Turnos.Infrastructure\bin\Debug\net10.0\Turnos.Infrastructure.dll [C:\Users\Julio\Desktop\Turnos\Turnos.Services\Turnos.Services.csproj]
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT 1
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (38ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT CASE WHEN COUNT(*) = 0 THEN FALSE ELSE TRUE END
+FROM pg_class AS cls
+JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+WHERE
+        cls.relkind IN ('r', 'v', 'm', 'f', 'p') AND
+        ns.nspname NOT IN ('pg_catalog', 'information_schema') AND
+        -- Exclude tables which are members of PG extensions
+        NOT EXISTS (
+            SELECT 1 FROM pg_depend WHERE
+                classid=(
+                    SELECT cls.oid
+                    FROM pg_class AS cls
+                             JOIN pg_namespace AS ns ON ns.oid = cls.relnamespace
+                    WHERE relname='pg_class' AND ns.nspname='pg_catalog'
+                ) AND
+                objid=cls.oid AND
+                deptype IN ('e', 'x')
+        )
+info: Microsoft.EntityFrameworkCore.Database.Command[20101]
+      Executed DbCommand (2ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
+      SELECT EXISTS (
+          SELECT 1
+          FROM "Users" AS u)
+fail: Microsoft.Extensions.Hosting.Internal.Host[11]
+      Hosting failed to start
+      System.IO.IOException: Failed to bind to address http://127.0.0.1:5240: address already in use.
+       ---> Microsoft.AspNetCore.Connections.AddressInUseException: Solo se permite un uso de cada direcci├│n de socket (protocolo/direcci├│n de red/puerto)
+       ---> System.Net.Sockets.SocketException (10048): Solo se permite un uso de cada direcci├│n de socket (protocolo/direcci├│n de red/puerto)
+         at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+         at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+         at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+         at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+         at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+         --- End of inner exception stack trace ---
+         at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+         at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+      --- End of stack trace from previous location ---
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+         --- End of inner exception stack trace ---
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+         at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+         at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+         at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)

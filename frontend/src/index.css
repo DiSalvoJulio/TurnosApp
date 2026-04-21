@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #2563EB;
+  --color-primary-hover: #1D4ED8;
+  --color-surface: #F8FAFC;
+  --color-textMain: #0F172A;
+  --color-textMuted: #64748B;
+
+  --font-size-base: 1.05rem;
+  --font-size-lg: 1.15rem;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-textMain);
+    min-height: 100vh;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+}
+
+@media print {
+  @page {
+    margin: 0;
+  }
+  body {
+    padding: 2cm;
+    background-color: white !important;
+  }
+}

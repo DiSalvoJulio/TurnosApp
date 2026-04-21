@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Turnos.API/Turnos.API.csproj" />
+  <Project Path="Turnos.Core/Turnos.Core.csproj" />
+  <Project Path="Turnos.Infrastructure/Turnos.Infrastructure.csproj" />
+  <Project Path="Turnos.Services/Turnos.Services.csproj" />
+</Solution>
