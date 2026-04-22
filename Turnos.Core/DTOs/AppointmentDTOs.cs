@@ -30,6 +30,7 @@ public class AppointmentResponse
     public TimeSpan EndTime { get; set; }
     public string Status { get; set; } = string.Empty;
     public string ProfessionalName { get; set; } = string.Empty;
+    public string ProfessionalSpecialty { get; set; } = string.Empty;
     public string? PatientName { get; set; }
 }
 

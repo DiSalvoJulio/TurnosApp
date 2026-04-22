@@ -450,96 +450,105 @@ export default function ProfessionalAgenda() {
                 ) : (
                     <div className="grid grid-cols-1 gap-3">
                         {filteredAppointments.map(app => {
-                            const isCancelled = app.status === 'CANCELLED';
-                            const isCompleted = app.status === 'COMPLETED';
-                            const appDate = parseISO(app.appointmentDate);
-                            const isPast = isBefore(appDate, startOfDay(new Date()));
-                            const isPastPending = isPast && !isCancelled && !isCompleted;
-                            const timeStr = app.startTime ? app.startTime.substring(0, 5) : '--:--';
+                                                            const isCancelled = app.status === 'CANCELLED' || app.status === 'RESCHEDULED';
+                                                            const isRescheduled = app.status === 'RESCHEDULED';
+                                                            const isCompleted = app.status === 'COMPLETED';
+                                                            const appDate = parseISO(app.appointmentDate);
+                                                            const isPast = isBefore(appDate, startOfDay(new Date()));
+                                                            const isPastPending = isPast && !isCancelled && !isCompleted;
+                                                            const timeStr = app.startTime ? app.startTime.substring(0, 5) : '--:--';
 
-                            return (
-                                <div
-                                    key={app.id}
-                                    className={clsx(
-                                        "group p-4 rounded-3xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden",
-                                        isCancelled
-                                            ? "bg-slate-50/50 border-slate-100 opacity-60 grayscale-[0.5]"
-                                            : isPastPending
-                                                ? "bg-amber-50/50 border-amber-100 shadow-sm"
-                                                : "bg-white border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100"
-                                    )}
-                                >
-                                    {isPastPending && <div className="absolute top-0 left-0 w-1.5 h-full bg-amber-500"></div>}
+                                                            return (
+                                                                <div
+                                                                    key={app.id}
+                                                                    className={clsx(
+                                                                        "group p-4 rounded-3xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden",
+                                                                        isCancelled
+                                                                            ? "bg-slate-50/50 border-slate-100 opacity-60 grayscale-[0.5]"
+                                                                            : isPastPending
+                                                                                ? "bg-amber-50/50 border-amber-100 shadow-sm"
+                                                                                : "bg-white border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100"
+                                                                    )}
+                                                                >
+                                                                    {(isPastPending || isRescheduled) && <div className={clsx("absolute top-0 left-0 w-1.5 h-full", isRescheduled ? "bg-amber-400" : "bg-amber-500")}></div>}
 
-                                    <div className="flex items-center gap-4">
-                                        <div className={clsx(
-                                            "w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors shadow-sm shrink-0",
-                                            isCancelled ? "bg-slate-200 text-slate-500" : 
-                                            isPastPending ? "bg-amber-100 text-amber-700 font-black" :
-                                            "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
-                                        )}>
-                                            <span className="text-[10px] font-black leading-none mb-0.5">HS</span>
-                                            <span className="text-lg font-black tabular-nums tracking-tight">{timeStr}</span>
-                                        </div>
+                                                                    <div className="flex items-center gap-4">
+                                                                        <div className={clsx(
+                                                                            "w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors shadow-sm shrink-0",
+                                                                            isCancelled && !isRescheduled ? "bg-slate-200 text-slate-500" : 
+                                                                            isRescheduled ? "bg-amber-50 text-amber-600" :
+                                                                            isPastPending ? "bg-amber-100 text-amber-700 font-black" :
+                                                                            "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
+                                                                        )}>
+                                                                            <span className="text-[10px] font-black leading-none mb-0.5">HS</span>
+                                                                            <span className="text-lg font-black tabular-nums tracking-tight">{timeStr}</span>
+                                                                        </div>
 
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                <h3 className={clsx(
-                                                    "text-lg font-black tracking-tight leading-none transition-colors",
-                                                    isCancelled ? "text-slate-400" : "text-slate-900 group-hover:text-blue-700"
-                                                )}>
-                                                    {app.patientName}
-                                                </h3>
-                                                <div className="flex gap-1.5">
-                                                    <span className={clsx(
-                                                        "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border",
-                                                        isCancelled ? "bg-red-50 text-red-600 border-red-100" :
-                                                        isCompleted ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                                        isPastPending ? "bg-amber-100 text-amber-700 border-amber-200" :
-                                                        "bg-blue-50 text-blue-600 border-blue-100"
-                                                    )}>
-                                                        {isCancelled ? 'Cancelado' : isCompleted ? 'Finalizado' : isPastPending ? 'Pte. Pasado' : 'Confirmado'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
-                                                <User className="w-3 h-3" /> Paciente #{app.patientId?.substring(0, 8)}
-                                            </p>
-                                        </div>
-                                    </div>
+                                                                        <div>
+                                                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                                                <h3 className={clsx(
+                                                                                    "text-lg font-black tracking-tight leading-none transition-colors",
+                                                                                    isCancelled && !isRescheduled ? "text-slate-400" : "text-slate-900 group-hover:text-blue-700"
+                                                                                )}>
+                                                                                    {app.patientName}
+                                                                                </h3>
+                                                                                <div className="flex gap-1.5">
+                                                                                    <span className={clsx(
+                                                                                        "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border",
+                                                                                        isRescheduled ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                                                        isCancelled ? "bg-red-50 text-red-600 border-red-100" :
+                                                                                        isCompleted ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                                                        isPastPending ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                                                                        "bg-blue-50 text-blue-600 border-blue-100"
+                                                                                    )}>
+                                                                                        {isRescheduled ? 'Reprogramado' : isCancelled ? 'Cancelado' : isCompleted ? 'Finalizado' : isPastPending ? 'Pte. Pasado' : 'Confirmado'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+                                                                                <User className="w-3 h-3" /> Paciente #{app.patientId?.substring(0, 8)}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
 
-                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                        {!isCancelled && !isCompleted && (
-                                            <>
-                                                <Button
-                                                    onClick={() => handleAttend(app)}
-                                                    className={clsx(
-                                                        "w-full sm:w-auto rounded-xl px-4 h-10 font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs",
-                                                        isPastPending ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
-                                                    )}
-                                                >
-                                                    <ClipboardList className="w-4 h-4 flex-shrink-0" />
-                                                    <span>{isPastPending ? 'Finalizar' : 'Atender'}</span>
-                                                </Button>
-                                                <Button
-                                                    variant="danger"
-                                                    onClick={() => handleCancel(app.id)}
-                                                    className="w-full sm:w-auto rounded-xl px-4 h-10 font-bold transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs"
-                                                >
-                                                    <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                                    <span>Cancelar</span>
-                                                </Button>
-                                            </>
-                                        )}
-                                        {isCompleted && (
-                                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 w-full sm:w-auto">
-                                                 <ClipboardList className="w-4 h-4 flex-shrink-0" />
-                                                 Finalizado
-                                             </div>
-                                        )}
-                                    </div>
-                                </div>
-                            );
+                                                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                                                        {!isCancelled && !isCompleted && !isRescheduled && (
+                                                                            <>
+                                                                                <Button
+                                                                                    onClick={() => handleAttend(app)}
+                                                                                    className={clsx(
+                                                                                        "w-full sm:w-auto rounded-xl px-4 h-10 font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs",
+                                                                                        isPastPending ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
+                                                                                    )}
+                                                                                >
+                                                                                    <ClipboardList className="w-4 h-4 flex-shrink-0" />
+                                                                                    <span>{isPastPending ? 'Finalizar' : 'Atender'}</span>
+                                                                                </Button>
+                                                                                <Button
+                                                                                    variant="danger"
+                                                                                    onClick={() => handleCancel(app.id)}
+                                                                                    className="w-full sm:w-auto rounded-xl px-4 h-10 font-bold transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs"
+                                                                                >
+                                                                                    <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                                                                    <span>Cancelar</span>
+                                                                                </Button>
+                                                                            </>
+                                                                        )}
+                                                                        {isCompleted && (
+                                                                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 w-full sm:w-auto">
+                                                                                 <ClipboardList className="w-4 h-4 flex-shrink-0" />
+                                                                                 Finalizado
+                                                                             </div>
+                                                                        )}
+                                                                        {isRescheduled && (
+                                                                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-100 w-full sm:w-auto">
+                                                                                 <Calendar className="w-4 h-4 flex-shrink-0" />
+                                                                                 Reprogramado
+                                                                             </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            );
                         })}
                     </div>
                 )}

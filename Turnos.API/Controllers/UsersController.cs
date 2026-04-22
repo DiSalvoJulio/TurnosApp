@@ -4,6 +4,8 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Turnos.Infrastructure.Data;
 using System.Security.Claims;
+using System.IO;
+using Microsoft.AspNetCore.Http;
 
 namespace Turnos.API.Controllers;
 
@@ -121,7 +123,7 @@ public class UsersController : ControllerBase
             patient.InsuranceNumber,
             patient.DateOfBirth,
             patient.User.Email,
-            Password = patient.User.PasswordHash
+            patient.User.ProfilePictureUrl
         });
 
     }
@@ -149,7 +151,7 @@ public class UsersController : ControllerBase
 
         if (!string.IsNullOrEmpty(request.Password))
         {
-            patient.User.PasswordHash = request.Password; // MVP: plain text as in current setup
+            patient.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         }
 
         if (isAdmin)
@@ -228,7 +230,7 @@ public class UsersController : ControllerBase
             prof.AppointmentDuration,
             prof.DateOfBirth,
             prof.User.Email,
-            Password = prof.User.PasswordHash
+            prof.User.ProfilePictureUrl
         });
 
     }
@@ -250,7 +252,7 @@ public class UsersController : ControllerBase
 
         if (!string.IsNullOrEmpty(request.Password))
         {
-            prof.User.PasswordHash = request.Password; // MVP: plain text
+            prof.User.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
         }
 
         if (isAdmin)
@@ -285,6 +287,36 @@ public class UsersController : ControllerBase
         await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Usuario eliminado permanentemente." });
+    }
+
+    [HttpPost("{id}/profile-picture")]
+    public async Task<IActionResult> UploadProfilePicture(Guid id, IFormFile file)
+    {
+        var user = await _context.Users.FindAsync(id);
+        if (user == null) return NotFound();
+        if (file == null || file.Length == 0) return BadRequest("No se proporcionó ningún archivo.");
+
+        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+        var extension = Path.GetExtension(file.FileName).ToLower();
+        if (!allowedExtensions.Contains(extension)) return BadRequest("Formato no permitido.");
+        if (file.Length > 5 * 1024 * 1024) return BadRequest("Máximo 5MB.");
+
+        var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
+        if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+
+        if (!string.IsNullOrEmpty(user.ProfilePictureUrl))
+        {
+            var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.ProfilePictureUrl.TrimStart('/'));
+            if (System.IO.File.Exists(oldPath)) { try { System.IO.File.Delete(oldPath); } catch {} }
+        }
+
+        var fileName = $"{id}_{DateTime.UtcNow.Ticks}{extension}";
+        var filePath = Path.Combine(uploadsFolder, fileName);
+        using (var stream = new FileStream(filePath, FileMode.Create)) { await file.CopyToAsync(stream); }
+
+        user.ProfilePictureUrl = $"/uploads/{fileName}";
+        await _context.SaveChangesAsync();
+        return Ok(new { Url = user.ProfilePictureUrl });
     }
 }
 

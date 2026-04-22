@@ -25,7 +25,19 @@ public class AppointmentService : IAppointmentService
             throw new ArgumentException("Los turnos deben solicitarse con al menos un día de anticipación.");
         }
 
-        // Validación simplificada del MVP
+        // VALIDACIÓN DE SOLAPAMIENTO (Prevención de doble reserva/Race Condition)
+        var dt = request.AppointmentDate.ToDateTime(TimeOnly.MinValue);
+        var occupiedApps = await _repository.GetOccupiedAppointmentsAsync(request.ProfessionalId, dt);
+        
+        bool isAlreadyTaken = occupiedApps.Any(app => 
+            request.StartTime < app.EndTime && request.EndTime > app.StartTime);
+
+        if (isAlreadyTaken)
+        {
+            throw new InvalidOperationException("El horario seleccionado ya no está disponible. Por favor, elija otro.");
+        }
+
+        // Registro del turno
         var appointment = new Appointment
         {
             ProfessionalId = request.ProfessionalId,
@@ -46,6 +58,16 @@ public class AppointmentService : IAppointmentService
         if (appointment == null || appointment.Status == "CANCELLED") return false;
 
         appointment.Status = "CANCELLED";
+        await _repository.UpdateAsync(appointment);
+        return true;
+    }
+
+    public async Task<bool> MarkAsRescheduledAsync(Guid id)
+    {
+        var appointment = await _repository.GetByIdAsync(id);
+        if (appointment == null) return false;
+
+        appointment.Status = "RESCHEDULED";
         await _repository.UpdateAsync(appointment);
         return true;
     }
@@ -185,6 +207,7 @@ public class AppointmentService : IAppointmentService
             EndTime = a.EndTime,
             Status = a.Status,
             ProfessionalName = a.Professional != null ? $"{a.Professional.FirstName} {a.Professional.LastName}" : string.Empty,
+            ProfessionalSpecialty = a.Professional?.Specialty ?? string.Empty,
             PatientName = a.Patient != null ? $"{a.Patient.FirstName} {a.Patient.LastName}" : (a.Status == "BLOCKED" ? "Horario Bloqueado" : string.Empty)
         };
     }

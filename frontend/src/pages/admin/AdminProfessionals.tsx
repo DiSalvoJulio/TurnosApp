@@ -69,9 +69,19 @@ export default function AdminProfessionals() {
     const saveChanges = async () => {
         if (!selectedId) return;
 
-        if (!form.firstName.trim() || !form.lastName.trim() || !form.specialty || !form.email.trim() || !form.dateOfBirth) {
-            return Swal.fire('Error', 'Nombre, Apellido, DNI, Fecha Nac., Especialidad y Email son obligatorios.', 'error');
+        if (!form.firstName.trim() || !form.lastName.trim() || !form.dni.trim() || !form.email.trim() || !form.password.trim() || !form.dateOfBirth || !form.specialty) {
+            return Swal.fire('Error', 'Nombre, Apellido, DNI, Fecha Nac., Especialidad, Email y Contraseña son obligatorios.', 'error');
         }
+
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(form.firstName)) return Swal.fire('Error', 'El nombre solo debe contener letras.', 'error');
+        if (!nameRegex.test(form.lastName)) return Swal.fire('Error', 'El apellido solo debe contener letras.', 'error');
+
+        const dniRegex = /^[0-9]{7,8}$/;
+        if (!dniRegex.test(form.dni)) return Swal.fire('Error', 'El DNI debe tener entre 7 y 8 números.', 'error');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) return Swal.fire('Error', 'El email no tiene un formato válido.', 'error');
 
         try {
             await api.put(`/users/professional/${selectedId}/profile`, {
@@ -88,15 +98,25 @@ export default function AdminProfessionals() {
             setSelectedId(null);
             setForm(emptyForm);
             loadProfs();
-        } catch {
-            Swal.fire('Error', 'No se pudo actualizar el profesional.', 'error');
+        } catch (e: any) {
+            Swal.fire('Error', e.response?.data || 'No se pudo actualizar el profesional.', 'error');
         }
     };
 
     const createProfessional = async () => {
-        if (!form.firstName.trim() || !form.lastName.trim() || !form.specialty || !form.email.trim() || !form.password.trim() || !form.dateOfBirth) {
-            return Swal.fire('Error', 'Nombre, Apellido, DNI, Fecha Nac., Especialidad, Email y Contraseña son obligatorios.', 'error');
+        if (!form.firstName.trim() || !form.lastName.trim() || !form.dni.trim() || !form.specialty || !form.email.trim() || !form.password.trim() || !form.dateOfBirth) {
+            return Swal.fire('Error', 'Todos los campos marcados, incluyendo la Especialidad, son obligatorios.', 'error');
         }
+
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(form.firstName)) return Swal.fire('Error', 'El nombre solo debe contener letras.', 'error');
+        if (!nameRegex.test(form.lastName)) return Swal.fire('Error', 'El apellido solo debe contener letras.', 'error');
+
+        const dniRegex = /^[0-9]{7,8}$/;
+        if (!dniRegex.test(form.dni)) return Swal.fire('Error', 'El DNI debe tener entre 7 y 8 números.', 'error');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) return Swal.fire('Error', 'El email no tiene un formato válido.', 'error');
 
         try {
             await api.post('/auth/register/professional', {
@@ -279,8 +299,8 @@ export default function AdminProfessionals() {
                         </div>
                         <div className="space-y-1">
                             <label className="text-sm font-bold text-slate-600 ml-1">Especialidad</label>
-                            <select name="specialty" value={form.specialty} onChange={updateForm} className="border p-2.5 rounded-xl w-full focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium">
-                                <option value="">Seleccionar Especialidad...</option>
+                            <select name="specialty" value={form.specialty} onChange={updateForm} className="border p-2.5 rounded-xl w-full focus:ring-2 focus:ring-indigo-500 outline-none bg-white font-medium cursor-pointer">
+                                <option value="" disabled>Seleccionar...</option>
                                 {professionsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                             </select>
                         </div>
@@ -448,7 +468,7 @@ export default function AdminProfessionals() {
                                             <div className="relative">
                                                 <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
                                                 <select name="specialty" value={form.specialty} onChange={updateForm} className="border border-slate-100 pl-12 pr-4 py-3.5 rounded-2xl w-full focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 outline-none bg-slate-50 font-bold transition-all appearance-none cursor-pointer">
-                                                    <option value="">Seleccionar...</option>
+                                                    <option value="" disabled>Seleccionar...</option>
                                                     {professionsList.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
                                                 </select>
                                             </div>

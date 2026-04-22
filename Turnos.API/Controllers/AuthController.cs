@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using System;
+using System.ComponentModel.DataAnnotations;
 using Turnos.Core.DTOs;
 using Turnos.Core.Interfaces;
 using Turnos.Infrastructure.Data;
@@ -63,8 +64,7 @@ public class AuthController : ControllerBase
         if (user == null)
             return BadRequest(new { Message = "Token inválido o expirado." });
 
-        // En MVP guardamos plano, en real hasheamos
-        user.PasswordHash = request.NewPassword;
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
         user.PasswordResetToken = null;
         user.ResetTokenExpiresAt = null;
         await _context.SaveChangesAsync();
@@ -75,21 +75,20 @@ public class AuthController : ControllerBase
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        // Validación MVP directa (en un caso real se usa hasheo e Identity)
         // Buscar por Email primero
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email && u.PasswordHash == request.Password);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
 
-        // Si no se encuentra por email, buscar por DNI (si es un paciente)
+        // Si no se encuentra por email, buscar por DNI
         if (user == null)
         {
             var patient = await _context.Patients
                 .Include(p => p.User)
-                .FirstOrDefaultAsync(p => p.Dni == request.Email && p.User.PasswordHash == request.Password);
+                .FirstOrDefaultAsync(p => p.Dni == request.Email);
 
             if (patient != null) user = patient.User;
         }
 
-        if (user == null)
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
             return Unauthorized("Credenciales inválidas.");
 
         Guid? profileId = null;
@@ -107,7 +106,6 @@ public class AuthController : ControllerBase
             profileId = prof?.UserId;
         }
 
-        // Token ficticio en MVP para acelerar el desarrollo del front (En prod: JWT real)
         var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Id}:{user.Role}"));
 
         return Ok(new AuthResponse
@@ -116,7 +114,8 @@ public class AuthController : ControllerBase
             Id = user.Id,
             ProfileId = profileId,
             Role = user.Role,
-            FirstName = firstName
+            FirstName = firstName,
+            ProfilePictureUrl = user.ProfilePictureUrl
         });
     }
 
@@ -126,10 +125,11 @@ public class AuthController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return BadRequest("El email ya está registrado.");
 
-        if (!string.IsNullOrWhiteSpace(request.Dni) && await _context.Patients.AnyAsync(p => p.Dni == request.Dni))
-            return BadRequest("El DNI ya está registrado para otro paciente.");
-
-        var user = new User { Email = request.Email, PasswordHash = request.Password, Role = "PATIENT" };
+        var user = new User { 
+            Email = request.Email, 
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password), 
+            Role = "PATIENT" 
+        };
         var patient = new Patient
         {
             UserId = user.Id,
@@ -139,7 +139,7 @@ public class AuthController : ControllerBase
             Phone = request.Phone,
             Dni = request.Dni,
             Address = request.Address,
-            DateOfBirth = DateTime.UtcNow // simplificado para MVP
+            DateOfBirth = request.DateOfBirth
         };
 
         _context.Users.Add(user);
@@ -155,10 +155,11 @@ public class AuthController : ControllerBase
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             return BadRequest("El email ya está registrado.");
 
-        if (!string.IsNullOrWhiteSpace(request.Dni) && await _context.Professionals.AnyAsync(p => p.Dni == request.Dni))
-            return BadRequest("El DNI ya está registrado para otro profesional.");
-
-        var user = new User { Email = request.Email, PasswordHash = request.Password, Role = "PROFESSIONAL" };
+        var user = new User { 
+            Email = request.Email, 
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password), 
+            Role = "PROFESSIONAL" 
+        };
         var professional = new Professional
         {
             UserId = user.Id,
@@ -169,6 +170,7 @@ public class AuthController : ControllerBase
             Address = request.Address,
             Specialty = request.Specialty,
             Phone = request.Phone,
+            DateOfBirth = request.DateOfBirth,
             WorksWeekends = request.WorksWeekends
         };
 
@@ -194,24 +196,68 @@ public class AuthController : ControllerBase
 
 public class RegisterPatientRequest
 {
+    [Required(ErrorMessage = "El email es obligatorio")]
+    [EmailAddress(ErrorMessage = "El formato del email no es válido")]
     public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La contraseña es obligatoria")]
+    [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
     public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El nombre es obligatorio")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre solo debe contener letras")]
     public string FirstName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El apellido es obligatorio")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido solo debe contener letras")]
     public string LastName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El DNI es obligatorio")]
+    [StringLength(8, MinimumLength = 7, ErrorMessage = "El DNI debe tener entre 7 y 8 caracteres")]
+    [RegularExpression("^[0-9]+$", ErrorMessage = "El DNI solo debe contener números")]
     public string Dni { get; set; } = string.Empty;
+
     public string Address { get; set; } = string.Empty;
+
+    [RegularExpression(@"^[0-9+\-\s]+$", ErrorMessage = "El formato del teléfono no es válido")]
     public string Phone { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
+    public DateTime DateOfBirth { get; set; }
 }
 
 public class RegisterProfessionalRequest
 {
+    [Required(ErrorMessage = "El email es obligatorio")]
+    [EmailAddress(ErrorMessage = "El formato del email no es válido")]
     public string Email { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La contraseña es obligatoria")]
+    [MinLength(6, ErrorMessage = "La contraseña debe tener al menos 6 caracteres")]
     public string Password { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El nombre es obligatorio")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El nombre solo debe contener letras")]
     public string FirstName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El apellido es obligatorio")]
+    [RegularExpression(@"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$", ErrorMessage = "El apellido solo debe contener letras")]
     public string LastName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "El DNI es obligatorio")]
+    [StringLength(8, MinimumLength = 7, ErrorMessage = "El DNI debe tener entre 7 y 8 caracteres")]
+    [RegularExpression("^[0-9]+$", ErrorMessage = "El DNI solo debe contener números")]
     public string Dni { get; set; } = string.Empty;
+
     public string Address { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La especialidad es obligatoria")]
     public string Specialty { get; set; } = string.Empty;
+
+    [RegularExpression(@"^[0-9+\-\s]+$", ErrorMessage = "El formato del teléfono no es válido")]
     public string Phone { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "La fecha de nacimiento es obligatoria")]
+    public DateTime DateOfBirth { get; set; }
     public bool WorksWeekends { get; set; } = true;
 }

@@ -58,6 +58,16 @@ export default function AdminPatients() {
             return Swal.fire('Error', 'Nombre, Apellido, DNI, Fecha Nac., Email y Contraseña son obligatorios.', 'error');
         }
 
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(form.firstName)) return Swal.fire('Error', 'El nombre solo debe contener letras.', 'error');
+        if (!nameRegex.test(form.lastName)) return Swal.fire('Error', 'El apellido solo debe contener letras.', 'error');
+
+        const dniRegex = /^[0-9]{7,8}$/;
+        if (!dniRegex.test(form.dni)) return Swal.fire('Error', 'El DNI debe tener entre 7 y 8 números.', 'error');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) return Swal.fire('Error', 'El email no tiene un formato válido.', 'error');
+
         try {
             await api.post('/auth/register/patient', {
                 email: form.email,
@@ -107,6 +117,16 @@ export default function AdminPatients() {
         if (!form.firstName.trim() || !form.lastName.trim() || !form.dni.trim() || !form.email.trim() || !form.dateOfBirth) {
             return Swal.fire('Error', 'Nombre, Apellido, DNI, Fecha Nac. y Email son obligatorios.', 'error');
         }
+
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(form.firstName)) return Swal.fire('Error', 'El nombre solo debe contener letras.', 'error');
+        if (!nameRegex.test(form.lastName)) return Swal.fire('Error', 'El apellido solo debe contener letras.', 'error');
+
+        const dniRegex = /^[0-9]{7,8}$/;
+        if (!dniRegex.test(form.dni)) return Swal.fire('Error', 'El DNI debe tener entre 7 y 8 números.', 'error');
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) return Swal.fire('Error', 'El email no tiene un formato válido.', 'error');
 
         try {
             await api.put(`/users/patient/${selectedId}/profile`, {

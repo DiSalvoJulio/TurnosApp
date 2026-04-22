@@ -11,6 +11,7 @@ interface Appointment {
     id: string;
     professionalId: string;
     professionalName: string;
+    professionalSpecialty: string;
     appointmentDate: string;
     startTime: string;
     status: string;
@@ -32,7 +33,8 @@ export default function PatientHistory() {
             const { data } = await api.get(`/appointments/patient/${patientId}`);
             if (Array.isArray(data)) {
                 const upcoming = data.filter((a: Appointment) => {
-                    if (a.status === 'CANCELLED' || a.status === 'COMPLETED') return false;
+                    // Solo mostramos los turnos "vivos" (agendados/confirmados) que sean para hoy o futuro
+                    if (a.status === 'CANCELLED' || a.status === 'COMPLETED' || a.status === 'RESCHEDULED') return false;
                     try {
                         const datePart = a.appointmentDate.split('T')[0];
                         const appDate = startOfDay(parseISO(datePart));
@@ -124,15 +126,17 @@ export default function PatientHistory() {
             CANCELLED: 'bg-red-100 text-red-700 border-red-200',
             COMPLETED: 'bg-blue-100 text-blue-700 border-blue-200',
             SCHEDULED: 'bg-teal-100 text-teal-700 border-teal-200',
+            RESCHEDULED: 'bg-amber-100 text-amber-700 border-amber-200',
         };
         const labels: Record<string, string> = {
             CONFIRMED: 'Confirmado',
             CANCELLED: 'Cancelado',
             COMPLETED: 'Completado',
             SCHEDULED: 'Agendado',
+            RESCHEDULED: 'Reprogramado',
         };
         return (
-            <span className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${map[status] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border ${map[status] ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                 {labels[status] ?? status}
             </span>
         );
@@ -192,8 +196,8 @@ export default function PatientHistory() {
                                     const today = startOfDay(new Date());
 
                                     const status = app.status?.toUpperCase();
-                                    // Es próximo si no está cancelado/completado Y es hoy o en el futuro
-                                    isUpcoming = (status !== 'CANCELLED' && status !== 'COMPLETED') &&
+                                    // Es próximo si no está cancelado/completado/reprogramado Y es hoy o en el futuro
+                                    isUpcoming = (status !== 'CANCELLED' && status !== 'COMPLETED' && status !== 'RESCHEDULED') &&
                                         (appointmentDate >= today);
                                 }
                                 if (app.startTime) {
@@ -205,16 +209,21 @@ export default function PatientHistory() {
 
                             return (
                                 <div key={app.id} className={`group bg-white rounded-[2rem] p-6 md:p-8 border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:shadow-emerald-50 hover:border-emerald-100 ${app.status === 'CANCELLED' ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+                                    <div className="mb-4 flex justify-between items-start">
+                                        {statusBadge(app.status)}
+                                    </div>
+                                    
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                         <div className="flex items-start sm:items-center gap-4 sm:gap-6 w-full md:w-auto min-w-0">
                                             <div className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors shadow-sm ${isUpcoming ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' : 'bg-slate-50 text-slate-400'}`}>
                                                 <Calendar className="w-6 h-6 sm:w-8 sm:h-8" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-1">
+                                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 mb-1">
                                                     <p className="font-black text-slate-900 text-lg sm:text-xl leading-none truncate">{app.professionalName || 'Profesional no asignado'}</p>
-                                                    <div className="self-start sm:self-auto">
-                                                        {statusBadge(app.status)}
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="hidden sm:inline text-slate-300">•</span>
+                                                        <span className="text-emerald-700 font-bold text-[10px] uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md self-start sm:self-auto">{app.professionalSpecialty}</span>
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center mt-2 sm:mt-3 min-w-0">

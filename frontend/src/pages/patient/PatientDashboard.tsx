@@ -10,6 +10,7 @@ interface Appointment {
     id: string;
     professionalId: string;
     professionalName: string;
+    professionalSpecialty: string;
     appointmentDate: string;
     startTime: string;
     status: string;
@@ -40,7 +41,12 @@ export default function PatientDashboard() {
 
     const upcoming = appointments.filter(a => {
         try {
-            return a.status !== 'CANCELLED' && a.status !== 'COMPLETED' && a.appointmentDate && (isFuture(parseISO(a.appointmentDate)) || format(new Date(), 'yyyy-MM-dd') === a.appointmentDate.split('T')[0]);
+            const status = a.status?.toUpperCase();
+            return status !== 'CANCELLED' && 
+                   status !== 'COMPLETED' && 
+                   status !== 'RESCHEDULED' && 
+                   a.appointmentDate && 
+                   (isFuture(parseISO(a.appointmentDate)) || format(new Date(), 'yyyy-MM-dd') === a.appointmentDate.split('T')[0]);
         } catch (e) {
             return false;
         }
@@ -87,16 +93,30 @@ export default function PatientDashboard() {
 
     return (
         <div className="max-w-6xl mx-auto p-6 md:p-12">
-            <header className="mb-12">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-widest">Panel del Paciente</span>
+            <header className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <div className="flex items-center gap-3 mb-2">
+                        <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-widest">Panel del Paciente</span>
+                    </div>
+                    <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-3">
+                        ¡Hola, {firstName}!
+                    </h1>
+                    <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl">
+                        Bienvenido a tu salud centralizada. Gestioná tus turnos con total facilidad.
+                    </p>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-3">
-                    ¡Hola, {firstName}!
-                </h1>
-                <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl">
-                    Bienvenido a tu salud centralizada. Gestioná tus turnos con total facilidad.
-                </p>
+                <div className="flex flex-col items-center gap-2 group cursor-pointer" onClick={() => navigate('/patient/profile')}>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover:text-indigo-600 transition-colors">Perfil</span>
+                    <div className="w-24 h-24 bg-slate-100 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-all">
+                        {localStorage.getItem('profilePictureUrl') ? (
+                            <img src={`http://localhost:5005${localStorage.getItem('profilePictureUrl')}`} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <User className="w-12 h-12" />
+                            </div>
+                        )}
+                    </div>
+                </div>
             </header>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -170,7 +190,11 @@ export default function PatientDashboard() {
                                             <CalendarDays className="w-6 h-6 sm:w-8 sm:h-8" />
                                         </div>
                                         <div className="min-w-0 flex-1 py-1">
-                                            <p className="font-black text-slate-900 text-base sm:text-lg leading-tight mb-1 truncate">{app.professionalName}</p>
+                                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                                                <p className="font-black text-slate-900 text-base sm:text-lg leading-tight truncate">{app.professionalName}</p>
+                                                <span className="hidden sm:inline text-slate-300">•</span>
+                                                <span className="text-emerald-600 font-bold text-[10px] uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-md self-start sm:self-auto ">{app.professionalSpecialty}</span>
+                                            </div>
                                             <p className="text-slate-500 font-bold text-xs sm:text-sm capitalize break-words whitespace-normal leading-tight">{dateStr} — {time} hs</p>
                                         </div>
                                     </div>

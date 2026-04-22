@@ -3,4 +3,5 @@
   <Project Path="Turnos.Core/Turnos.Core.csproj" />
   <Project Path="Turnos.Infrastructure/Turnos.Infrastructure.csproj" />
   <Project Path="Turnos.Services/Turnos.Services.csproj" />
+  <Project Path="Turnos.Tests/Turnos.Tests.csproj" />
 </Solution>

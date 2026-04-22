@@ -65,6 +65,7 @@ catch (Exception ex)
     Console.WriteLine("Error seeding database: " + ex.Message);
 }
 
+app.UseStaticFiles();
 app.UseCors("AllowReactApp");
 app.UseAuthorization();
 app.MapControllers();

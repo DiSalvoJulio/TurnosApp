@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Clock, BookOpen, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, BookOpen, ChevronRight, User } from 'lucide-react';
 
 export default function ProfessionalDashboard() {
     const navigate = useNavigate();
@@ -39,56 +39,70 @@ export default function ProfessionalDashboard() {
     ];
 
     return (
-        <div className="max-w-6xl mx-auto p-6 md:p-12">
-            <header className="mb-12">
-                <div className="flex items-center gap-3 mb-2">
-                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-lg text-xs font-black uppercase tracking-widest">Dashboard Profesional</span>
+        <div className="max-w-6xl mx-auto p-4 md:p-8 min-h-[90vh] flex flex-col justify-center">
+            <header className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded-md text-[10px] font-black uppercase tracking-widest">Dashboard Profesional</span>
+                    </div>
+                    <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">
+                        ¡Hola, {firstName}!
+                    </h1>
+                    <p className="text-slate-500 text-base md:text-lg font-medium max-w-2xl">
+                        Bienvenido a tu panel de gestión.
+                    </p>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none mb-3">
-                    ¡Hola, {firstName}!
-                </h1>
-                <p className="text-slate-500 text-lg md:text-xl font-medium max-w-2xl">
-                    Bienvenido a tu panel de gestión. Aquí tienes el control total de tu consultorio.
-                </p>
+                <div className="flex flex-col items-center gap-1 group cursor-pointer" onClick={() => navigate('/professional/profile')}>
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover:text-indigo-600 transition-colors">Perfil</span>
+                    <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-2xl overflow-hidden border-4 border-white shadow-lg group-hover:scale-105 transition-all">
+                        {localStorage.getItem('profilePictureUrl') ? (
+                            <img src={`http://localhost:5005${localStorage.getItem('profilePictureUrl')}`} className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-slate-300">
+                                <User className="w-8 h-8 md:w-10 md:h-10" />
+                            </div>
+                        )}
+                    </div>
+                </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {cards.map((card, index) => {
                     const Icon = card.icon;
                     return (
                         <button
                             key={index}
                             onClick={() => navigate(card.path)}
-                            className={`group relative text-left p-8 rounded-[2.5rem] bg-white border ${card.border} hover:shadow-2xl hover:shadow-indigo-100/50 transition-all duration-300 hover:-translate-y-2`}
+                            className={`group relative text-left p-6 rounded-[2rem] bg-white border ${card.border} hover:shadow-xl hover:shadow-indigo-100/30 transition-all duration-300 hover:-translate-y-1.5`}
                         >
-                            <div className={`${card.bg} ${card.text} w-16 h-16 rounded-3xl flex items-center justify-center mb-10 transition-transform duration-500 group-hover:rotate-12`}>
-                                <Icon className="w-8 h-8" />
+                            <div className={`${card.bg} ${card.text} w-12 h-12 rounded-2xl flex items-center justify-center mb-6 transition-transform duration-500 group-hover:rotate-12`}>
+                                <Icon className="w-6 h-6" />
                             </div>
 
-                            <h2 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
+                            <h2 className="text-xl font-black text-slate-900 mb-2 tracking-tight">
                                 {card.title}
                             </h2>
-                            <p className="text-slate-500 font-medium leading-relaxed mb-8">
+                            <p className="text-slate-400 text-sm font-medium leading-normal mb-6">
                                 {card.description}
                             </p>
 
-                            <div className={`mt-auto flex items-center gap-2 font-bold ${card.text} tracking-tight`}>
-                                Ingresar ahora
-                                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                            <div className={`mt-auto flex items-center gap-1.5 text-sm font-bold ${card.text} tracking-tight`}>
+                                Ingresar
+                                <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
                             </div>
 
                             {/* Decorative element */}
-                            <div className={`absolute top-8 right-8 w-2 h-2 rounded-full ${card.color} opacity-20 group-hover:scale-[8] transition-transform duration-500`}></div>
+                            <div className={`absolute top-6 right-6 w-1.5 h-1.5 rounded-full ${card.color} opacity-20 group-hover:scale-[6] transition-transform duration-500`}></div>
                         </button>
                     );
                 })}
             </div>
 
-            <footer className="mt-16 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                <p className="text-slate-400 font-bold text-sm">© 2026 TurnosPRO • Sistema de Gestión de Salud</p>
-                <div className="flex gap-6">
-                    <button className="text-slate-400 hover:text-indigo-600 font-bold text-sm transition-colors">Soporte Técnico</button>
-                    <button className="text-slate-400 hover:text-indigo-600 font-bold text-sm transition-colors">Manual de Uso</button>
+            <footer className="mt-10 pt-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-3">
+                <p className="text-slate-400 font-bold text-[10px] uppercase tracking-wide">© 2026 TurnosPRO • Gestión de Salud</p>
+                <div className="flex gap-4">
+                    <button className="text-slate-400 hover:text-indigo-600 font-bold text-xs transition-colors">Soporte</button>
+                    <button className="text-slate-400 hover:text-indigo-600 font-bold text-xs transition-colors">Manual</button>
                 </div>
             </footer>
         </div>

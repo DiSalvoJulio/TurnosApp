@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import Swal from 'sweetalert2';
-import { User, Save, MapPin, Phone, Mail, CreditCard, ChevronLeft, CheckCircle, AlertCircle, Shield, Fingerprint, Calendar, Lock, Eye, EyeOff, Edit3, X } from 'lucide-react';
+import { User, Save, MapPin, Phone, Mail, CreditCard, ChevronLeft, CheckCircle, AlertCircle, Shield, Fingerprint, Calendar, Lock, Eye, EyeOff, Edit3, X, Camera } from 'lucide-react';
 
 interface Profile {
     firstName: string;
@@ -15,6 +15,7 @@ interface Profile {
     insuranceCompany: string;
     insuranceNumber: string;
     dateOfBirth: string;
+    profilePictureUrl?: string;
     password?: string;
 }
 
@@ -46,7 +47,6 @@ export default function PatientProfile() {
                 if (data.dateOfBirth) data.dateOfBirth = data.dateOfBirth.substring(0, 10);
                 setProfile(data);
                 setInitialProfile({...data});
-                if (data.password) setPasswords({ password: data.password, confirmPassword: data.password });
             })
             .catch(() => setError('No se pudo cargar el perfil.'))
             .finally(() => setLoading(false));
@@ -72,10 +72,13 @@ export default function PatientProfile() {
             }
         });
 
-        if (!passwords.password) newErrors.password = 'Campo obligatorio.';
-        if (!passwords.confirmPassword) newErrors.confirmPassword = 'Campo obligatorio.';
-        if (passwords.password && passwords.confirmPassword && passwords.password !== passwords.confirmPassword) {
-            newErrors.confirmPassword = 'Las contraseñas no coinciden.';
+        // Password only mandatory if one of the fields is filled
+        if (passwords.password || passwords.confirmPassword) {
+            if (!passwords.password) newErrors.password = 'Campo obligatorio.';
+            if (!passwords.confirmPassword) newErrors.confirmPassword = 'Campo obligatorio.';
+            if (passwords.password && passwords.confirmPassword && passwords.password !== passwords.confirmPassword) {
+                newErrors.confirmPassword = 'Las contraseñas no coinciden.';
+            }
         }
 
         setInputErrors(newErrors);
@@ -117,6 +120,42 @@ export default function PatientProfile() {
         setPasswords({ password: '', confirmPassword: '' });
         setIsEditing(false);
         setError('');
+    };
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validar tipo y tamaño (opcional pero recomendado)
+        if (!file.type.startsWith('image/')) {
+            Swal.fire('Error', 'Por favor selecciona una imagen válida.', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        setSaving(true);
+        try {
+            const res = await api.post(`/users/${patientId}/profile-picture`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const newUrl = res.data.url;
+            setProfile(prev => ({ ...prev, profilePictureUrl: newUrl }));
+            if (initialProfile) setInitialProfile({ ...initialProfile, profilePictureUrl: newUrl });
+            localStorage.setItem('profilePictureUrl', newUrl);
+            
+            Swal.fire({
+                title: '¡Foto actualizada!',
+                icon: 'success',
+                timer: 1500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            Swal.fire('Error', 'No se pudo subir la imagen.', 'error');
+        } finally {
+            setSaving(false);
+        }
     };
 
 
@@ -172,13 +211,31 @@ export default function PatientProfile() {
                 <button onClick={() => navigate('/patient/dashboard')} className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest mb-4 transition-colors">
                     <ChevronLeft className="w-4 h-4" /> Inicio
                 </button>
-                <div className="flex items-center gap-4 mb-2">
-                    <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[1.25rem] flex items-center justify-center shadow-inner">
-                        <User className="w-8 h-8" />
+                <div className="flex flex-col md:flex-row items-center md:items-end gap-6 mb-2">
+                    <div className="relative group">
+                        <div className="w-32 h-32 bg-emerald-50 text-emerald-600 rounded-[2.5rem] flex items-center justify-center shadow-inner overflow-hidden border-4 border-white shadow-xl">
+                            {profile.profilePictureUrl ? (
+                                <img 
+                                    src={`http://localhost:5005${profile.profilePictureUrl}`} 
+                                    alt="Profile" 
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <User className="w-16 h-16" />
+                            )}
+                        </div>
+                        {isEditing && (
+                            <label className="absolute bottom-[-10px] right-[-10px] w-12 h-12 bg-white text-emerald-600 rounded-2xl shadow-xl flex items-center justify-center cursor-pointer hover:bg-emerald-50 transition-all active:scale-90 border border-slate-100">
+                                <Camera className="w-6 h-6" />
+                                <input type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+                            </label>
+                        )}
                     </div>
-                    <div>
-                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">Mi Perfil</h1>
-                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-2">Configuración de datos personales</p>
+                    <div className="text-center md:text-left">
+                        <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
+                            {profile.firstName} {profile.lastName}
+                        </h1>
+                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest mt-3">Mi Perfil de Paciente</p>
                     </div>
                 </div>
             </header>

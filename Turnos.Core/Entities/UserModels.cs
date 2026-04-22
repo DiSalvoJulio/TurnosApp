@@ -11,6 +11,7 @@ public class User
     public bool IsActive { get; set; } = true;
     public string? PasswordResetToken { get; set; }
     public DateTimeOffset? ResetTokenExpiresAt { get; set; }
+    public string? ProfilePictureUrl { get; set; }
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
 }
 

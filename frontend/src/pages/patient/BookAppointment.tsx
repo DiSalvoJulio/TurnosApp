@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import api from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import { Calendar, Clock, UserIcon, Activity, ChevronLeft, CheckCircle2 } from 'lucide-react';
@@ -122,9 +123,9 @@ export default function BookAppointment() {
             // Si es reprogramación, automáticamente cancelar el turno anterior
             if (editState?.appointmentIdToCancel) {
                 try {
-                    await api.put(`/appointments/${editState.appointmentIdToCancel}/cancel`);
+                    await api.put(`/appointments/${editState.appointmentIdToCancel}/reschedule-mark`);
                 } catch (cancelError) {
-                    console.error("Error cancelando el turno anterior durante la reprogramación", cancelError);
+                    console.error("Error marcando el turno anterior como reprogramado", cancelError);
                 }
             }
 
@@ -148,7 +149,15 @@ export default function BookAppointment() {
                     <CheckCircle2 className="w-12 h-12" />
                 </div>
                 <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-4">¡Turno Confirmado!</h2>
-                <p className="text-slate-500 text-xl font-medium max-w-md mx-auto mb-10">Su cita ha sido registrada exitosamente. Ya puede verla en sus próximos turnos.</p>
+                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 mb-8 max-w-sm mx-auto">
+                    <p className="text-slate-900 font-black text-lg">{professionals.find(p => p.id === selectedProf)?.firstName} {professionals.find(p => p.id === selectedProf)?.lastName}</p>
+                    <p className="text-emerald-600 font-black text-xs uppercase tracking-widest mb-3">{selectedSpecialty}</p>
+                    <p className="text-slate-500 font-bold text-sm border-t border-slate-200 pt-3">
+                        {format(new Date(selectedDate.split('-').map(Number)[0], selectedDate.split('-').map(Number)[1]-1, selectedDate.split('-').map(Number)[2]), "EEEE d 'de' MMMM", { locale: es })}
+                        <br/>a las {selectedSlot} hs
+                    </p>
+                </div>
+                <p className="text-slate-400 text-sm font-medium max-w-md mx-auto mb-10">Su cita ha sido registrada exitosamente. Ya puede verla en sus próximos turnos.</p>
 
                 <div className="flex flex-col gap-3 w-full max-w-sm">
                     <Button onClick={() => navigate('/patient/dashboard')} className="rounded-2xl py-6 font-black bg-emerald-600 hover:bg-emerald-700 shadow-xl shadow-emerald-100">
@@ -178,18 +187,18 @@ export default function BookAppointment() {
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* Paso 1: Especialidad */}
-                <section className="bg-white p-5 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-                    <div className="absolute top-0 left-0 w-2 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    <label className="flex items-center gap-3 sm:gap-4 text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-4 sm:mb-6">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-emerald-50 text-emerald-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                            <Activity className="w-6 h-6 sm:w-7 sm:h-7" />
+                <section className="bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group h-full">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <label className="flex items-center gap-3 text-lg sm:text-xl font-black text-slate-800 tracking-tight mb-3 sm:mb-4">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 bg-emerald-50 text-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+                            <Activity className="w-5 h-5 sm:w-6 sm:h-6" />
                         </div>
                         <span>1. Especialidad</span>
                     </label>
                     <select
-                        className="w-full p-4 sm:p-5 text-base sm:text-lg border-2 border-slate-50 rounded-2xl bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 disabled:opacity-50 truncate pr-8 box-border"
+                        className="w-full p-3 sm:p-4 text-base border-2 border-slate-50 rounded-xl bg-slate-50 focus:bg-white focus:border-emerald-500 outline-none transition-all font-bold text-slate-700 disabled:opacity-50 truncate pr-8 box-border"
                         value={selectedSpecialty}
                         disabled={!!editState}
                         onChange={(e) => {
@@ -199,99 +208,84 @@ export default function BookAppointment() {
                             setSelectedSlot('');
                         }}
                     >
-                        <option value="">Seleccione una especialidad...</option>
+                        <option value="">Especialidad...</option>
                         {specialties.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </section>
 
                 {/* Paso 2: Profesional */}
-                {(selectedSpecialty || editState) && (
-                    <section className="bg-white p-5 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <label className="flex items-center gap-3 sm:gap-4 text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-4 sm:mb-6">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-teal-50 text-teal-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                                <UserIcon className="w-6 h-6 sm:w-7 sm:h-7" />
-                            </div>
-                            <span>2. Profesional</span>
-                        </label>
-                        <select
-                            className="w-full p-4 sm:p-5 text-base sm:text-lg border-2 border-slate-50 rounded-2xl bg-slate-50 focus:bg-white focus:border-teal-500 outline-none transition-all font-bold text-slate-700 disabled:opacity-50 truncate pr-8 box-border"
-                            value={selectedProf}
-                            disabled={!!editState}
-                            onChange={(e) => { setSelectedProf(e.target.value); setSelectedDate(''); setSelectedSlot(''); }}
-                        >
-                            <option value="">Seleccione un especialista...</option>
-                            {professionals
-                                .filter(p => p.specialty === selectedSpecialty)
-                                .reduce((acc: Professional[], current) => {
-                                    const x = acc.find(item => item.firstName === current.firstName && item.lastName === current.lastName);
-                                    if (!x) return acc.concat([current]);
-                                    else return acc;
-                                }, [])
-                                .map(p => (
-                                    <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
-                                ))
-                            }
-                        </select>
-                    </section>
-                )}
+                <section className={clsx(
+                    "bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group h-full transition-all duration-500",
+                    (selectedSpecialty || editState) ? "opacity-100 translate-y-0" : "opacity-30 blur-[2px] pointer-events-none"
+                )}>
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <label className="flex items-center gap-3 text-lg sm:text-xl font-black text-slate-800 tracking-tight mb-3 sm:mb-4">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 bg-teal-50 text-teal-600 rounded-lg sm:rounded-xl flex items-center justify-center">
+                            <UserIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+                        <span>2. Profesional</span>
+                    </label>
+                    <select
+                        className="w-full p-3 sm:p-4 text-base border-2 border-slate-50 rounded-xl bg-slate-50 focus:bg-white focus:border-teal-500 outline-none transition-all font-bold text-slate-700 disabled:opacity-50 truncate pr-8 box-border"
+                        value={selectedProf}
+                        disabled={!!editState}
+                        onChange={(e) => { setSelectedProf(e.target.value); setSelectedDate(''); setSelectedSlot(''); }}
+                    >
+                        <option value="">Especialista...</option>
+                        {professionals
+                            .filter(p => p.specialty === selectedSpecialty)
+                            .reduce((acc: Professional[], current) => {
+                                const x = acc.find(item => item.firstName === current.firstName && item.lastName === current.lastName);
+                                if (!x) return acc.concat([current]);
+                                else return acc;
+                            }, [])
+                            .map(p => (
+                                <option key={p.id} value={p.id}>{p.firstName} {p.lastName}</option>
+                            ))
+                        }
+                    </select>
+                </section>
 
                 {/* Paso 3: Fecha */}
-                {selectedProf && (
-                    <section className="bg-white p-5 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <label className="flex items-center gap-3 sm:gap-4 text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-4 sm:mb-6">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-emerald-100 text-emerald-700 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                                <Calendar className="w-6 h-6 sm:w-7 sm:h-7" />
-                            </div>
-                            <span>3. Elija Nueva Fecha</span>
-                        </label>
-                        <input
-                            type="date"
-                            min={format(new Date(new Date().setDate(new Date().getDate() + 1)), 'yyyy-MM-dd')}
-                            className="w-full p-4 sm:p-5 text-base sm:text-lg border-2 border-slate-50 rounded-2xl bg-slate-50 focus:bg-white focus:border-emerald-600 outline-none transition-all font-bold text-slate-700 box-border truncate"
-                            value={selectedDate}
-                            onChange={(e) => { 
-                                const dateStr = e.target.value;
-                                if (!dateStr) return;
-                                
-                                // El input date devuelve YYYY-MM-DD. Al crear Date, se asume UTC o local.
-                                // Usamos una forma que no desplace el día.
-                                const [year, month, day] = dateStr.split('-').map(Number);
-                                const date = new Date(year, month - 1, day);
-                                
-                                if (date.getDay() === 0) { // 0 es Domingo
-                                    Swal.fire({
-                                        title: 'Día no disponible',
-                                        text: 'El centro permanece cerrado los días domingos.',
-                                        icon: 'info',
-                                        confirmButtonColor: '#10b981'
-                                    });
-                                    setSelectedDate('');
-                                } else if (date.getDay() === 6 && !worksSaturdays) {
-                                    Swal.fire({
-                                        title: 'Día no disponible',
-                                        text: 'El profesional seleccionado no trabaja los días sábados.',
-                                        icon: 'info',
-                                        confirmButtonColor: '#10b981'
-                                    });
-                                    setSelectedDate('');
-                                } else if (blockedDates.includes(dateStr)) {
-                                    Swal.fire({
-                                        title: 'Día bloqueado',
-                                        text: 'El profesional no tiene disponibilidad para la fecha seleccionada.',
-                                        icon: 'warning',
-                                        confirmButtonColor: '#10b981'
-                                    });
-                                    setSelectedDate('');
-                                } else {
-                                    setSelectedDate(dateStr);
-                                }
-                                setSelectedSlot(''); 
-                            }}
-                        />
-                    </section>
-                )}
+                <section className={clsx(
+                    "bg-white p-4 sm:p-6 rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group h-full transition-all duration-500 md:col-span-2",
+                    selectedProf ? "opacity-100 translate-y-0" : "opacity-30 blur-[2px] pointer-events-none"
+                )}>
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <label className="flex items-center gap-3 text-lg sm:text-xl font-black text-slate-800 tracking-tight mb-3 sm:mb-4">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 bg-emerald-100 text-emerald-700 rounded-lg sm:rounded-xl flex items-center justify-center">
+                            <Calendar className="w-5 h-5 sm:w-6 sm:h-6" />
+                        </div>
+                        <span>3. {editState ? 'Nueva Fecha' : 'Elija Fecha'}</span>
+                    </label>
+                    <input
+                        type="date"
+                        min={format(new Date(new Date().setDate(new Date().getDate() + 1)), 'yyyy-MM-dd')}
+                        className="w-full p-3 sm:p-4 text-base border-2 border-slate-50 rounded-xl bg-slate-50 focus:bg-white focus:border-emerald-600 outline-none transition-all font-bold text-slate-700 box-border truncate"
+                        value={selectedDate}
+                        onChange={(e) => { 
+                            const dateStr = e.target.value;
+                            if (!dateStr) return;
+                            const [year, month, day] = dateStr.split('-').map(Number);
+                            const date = new Date(year, month - 1, day);
+                            
+                            if (date.getDay() === 0) {
+                                Swal.fire({ title: 'Día no disponible', text: 'El centro permanece cerrado los domingos.', icon: 'info', confirmButtonColor: '#10b981' });
+                                setSelectedDate('');
+                            } else if (date.getDay() === 6 && !worksSaturdays) {
+                                Swal.fire({ title: 'Día no disponible', text: 'El profesional no trabaja los sábados.', icon: 'info', confirmButtonColor: '#10b981' });
+                                setSelectedDate('');
+                            } else if (blockedDates.includes(dateStr)) {
+                                Swal.fire({ title: 'Día bloqueado', text: 'Sin disponibilidad para esta fecha.', icon: 'warning', confirmButtonColor: '#10b981' });
+                                setSelectedDate('');
+                            } else {
+                                setSelectedDate(dateStr);
+                            }
+                            setSelectedSlot(''); 
+                        }}
+                    />
+                </section>
+            </div>
 
                 {/* Paso 4: Horarios */}
                 {selectedDate && (
@@ -335,7 +329,7 @@ export default function BookAppointment() {
                         )}
                     </section>
                 )}
-            </div>
+
 
             {selectedSlot && (
                 <div className="fixed bottom-0 left-0 w-full p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] z-[100] animate-in slide-in-from-bottom-full duration-500">

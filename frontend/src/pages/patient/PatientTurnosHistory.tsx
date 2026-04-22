@@ -10,6 +10,7 @@ interface Appointment {
     id: string;
     professionalId: string;
     professionalName: string;
+    professionalSpecialty: string;
     appointmentDate: string;
     startTime: string;
     status: string;
@@ -29,7 +30,7 @@ export default function PatientTurnosHistory() {
                 if (Array.isArray(data)) {
                     const filtered = data.filter((app: Appointment) => {
                         const status = app.status?.toUpperCase() || '';
-                        if (status === 'COMPLETED' || status === 'CANCELLED') return true;
+                        if (status === 'COMPLETED' || status === 'CANCELLED' || status === 'RESCHEDULED') return true;
                         
                         try {
                             const datePart = app.appointmentDate.split('T')[0];
@@ -112,28 +113,43 @@ export default function PatientTurnosHistory() {
                         let Icon = Clock;
 
                         if (status === 'COMPLETED') {
-                            badgeColor = 'bg-emerald-100 text-emerald-700';
+                            badgeColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
                             badgeLabel = 'Asistido';
                             Icon = CheckCircle2;
                         } else if (status === 'CANCELLED') {
-                            badgeColor = 'bg-red-100 text-red-700';
+                            badgeColor = 'bg-red-100 text-red-700 border-red-200';
                             badgeLabel = 'Cancelado';
                             Icon = XCircle;
+                        } else if (status === 'RESCHEDULED') {
+                            badgeColor = 'bg-amber-100 text-amber-700 border-amber-200';
+                            badgeLabel = 'Reprogramado';
+                            Icon = HistoryIcon;
                         } else if (status === 'SCHEDULED' || status === 'CONFIRMED') {
-                            badgeColor = 'bg-amber-100 text-amber-700';
-                            badgeLabel = 'Expirado';
+                            badgeColor = 'bg-slate-100 text-slate-500 border-slate-200';
+                            badgeLabel = 'No asistido';
                             Icon = Clock;
                         }
 
                         return (
-                            <div key={app.id} className="bg-white border border-slate-100 rounded-2xl p-4 md:p-5 shadow-sm">
-                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                                    <div>
-                                        <p className="text-slate-700 font-bold text-lg">{app.professionalName || 'Profesional'}</p>
-                                        <p className="text-slate-500 text-sm mt-1">{dateStr} • {time} hs</p>
-                                    </div>
-                                    <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${badgeColor} text-xs font-bold uppercase tracking-wide`}>
-                                        <Icon className="w-4 h-4" /> {badgeLabel}
+                            <div key={app.id} className="relative bg-white border border-slate-100 rounded-3xl p-5 md:p-6 shadow-sm hover:shadow-md transition-all">
+                                {/* Status Badge */}
+                                <div className={`absolute top-4 right-4 md:top-6 md:right-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl ${badgeColor} text-[10px] font-black uppercase tracking-widest border`}>
+                                    <Icon className="w-3.5 h-3.5" /> {badgeLabel}
+                                </div>
+
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    <div className="pr-20 md:pr-0">
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                                            <p className="text-slate-900 font-black text-lg sm:text-xl leading-tight truncate max-w-[200px] sm:max-w-none">{app.professionalName || 'Profesional'}</p>
+                                            <div className="flex items-center gap-2">
+                                                <span className="hidden sm:inline text-slate-300">•</span>
+                                                <span className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">{app.professionalSpecialty}</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-slate-500 font-medium text-sm mt-1.5 flex items-center gap-2">
+                                            <Clock className="w-4 h-4 text-emerald-500" />
+                                            {dateStr} • {time} hs
+                                        </p>
                                     </div>
                                 </div>
                             </div>

@@ -42,6 +42,7 @@ export default function Login() {
             localStorage.setItem('profileId', data.profileId ?? '');
             localStorage.setItem('userRole', data.role);
             localStorage.setItem('firstName', data.firstName ?? '');
+            localStorage.setItem('profilePictureUrl', data.profilePictureUrl ?? '');
 
             if (data.role === 'PATIENT') navigate('/patient/dashboard');
             else if (data.role === 'PROFESSIONAL') navigate('/professional/dashboard');
@@ -57,6 +58,13 @@ export default function Login() {
 
     const handleRecoverySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(recoveryEmail)) {
+            Swal.fire('Error', 'El formato del correo electrónico no es válido.', 'error');
+            return;
+        }
+
         setLoading(true);
         try {
             await api.post('/auth/forgot-password', { email: recoveryEmail });

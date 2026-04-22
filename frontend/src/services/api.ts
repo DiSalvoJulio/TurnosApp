@@ -18,7 +18,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        // No redirigir si el error es de login (para permitir mostrar error de credenciales)
+        const isLoginRequest = error.config?.url?.includes('/auth/login');
+        
+        if (error.response?.status === 401 && !isLoginRequest) {
             localStorage.removeItem('token');
             window.location.href = '/login';
         }

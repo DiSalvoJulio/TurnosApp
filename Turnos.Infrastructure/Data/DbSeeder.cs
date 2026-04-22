@@ -18,6 +18,12 @@ public static class DbSeeder
 
         await context.Database.EnsureCreatedAsync();
 
+        // Limpieza de base de datos para empezar de cero con encriptación
+        if (!context.Users.Any(u => u.PasswordHash.StartsWith("$2"))) // Si no hay claves encriptadas (que empiezan con $2...)
+        {
+            await context.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\" CASCADE;");
+        }
+
         // Hack para MVP: Asegurar que la nueva columna existe si la DB ya estaba creada
         try {
             await context.Database.ExecuteSqlRawAsync("ALTER TABLE \"Professionals\" ADD COLUMN IF NOT EXISTS \"WorksWeekends\" BOOLEAN DEFAULT TRUE;");
@@ -37,7 +43,7 @@ public static class DbSeeder
         // Seed admin account
         if (!context.Users.Any(u => u.Email == "admin@turnos.com"))
         {
-            var adminUser = new User { Email = "admin@turnos.com", PasswordHash = "123", Role = "ADMIN" };
+            var adminUser = new User { Email = "admin@turnos.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"), Role = "ADMIN" };
             context.Users.Add(adminUser);
             changed = true;
         }
@@ -104,7 +110,7 @@ public static class DbSeeder
                 var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Email == pInfo.Email);
                 if (existingUser == null)
                 {
-                    var user = new User { Email = pInfo.Email, PasswordHash = "123", Role = "PROFESSIONAL" };
+                    var user = new User { Email = pInfo.Email, PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"), Role = "PROFESSIONAL" };
                     var prof = new Professional { 
                         UserId = user.Id, User = user, 
                         FirstName = pInfo.First, LastName = pInfo.Last, 
@@ -132,7 +138,7 @@ public static class DbSeeder
         // Seed Patient if not exists
         if (!context.Users.Any(u => u.Email == "paciente@turnos.com"))
         {
-            var patUser = new User { Email = "paciente@turnos.com", PasswordHash = "123", Role = "PATIENT" };
+            var patUser = new User { Email = "paciente@turnos.com", PasswordHash = BCrypt.Net.BCrypt.HashPassword("123"), Role = "PATIENT" };
             var pat = new Patient { 
                 UserId = patUser.Id, User = patUser, 
                 FirstName = "María", LastName = "Gómez", Phone = "55667788", 

@@ -33,6 +33,15 @@ public class AppointmentsController : ControllerBase
         return Ok(new { message = "Turno cancelado correctamente." });
     }
 
+    [HttpPut("{id}/reschedule-mark")]
+    public async Task<IActionResult> MarkAsRescheduled(Guid id)
+    {
+        var success = await _service.MarkAsRescheduledAsync(id);
+        if (!success) return NotFound("Turno no encontrado.");
+
+        return Ok(new { message = "Turno marcado como reprogramado." });
+    }
+
     [HttpPost("block")]
     public async Task<IActionResult> BlockTime([FromBody] BlockTimeRequest request)
     {

@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/Button';
 
 export default function Register() {
     const [searchParams] = useSearchParams();
-    const [form, setForm] = useState({ role: 'PATIENT', firstName: '', lastName: '', specialty: '', dni: '', address: '', email: '', phone: '', password: '', confirmPassword: '' });
+    const [form, setForm] = useState({ role: 'PATIENT', firstName: '', lastName: '', specialty: '', dni: '', dateOfBirth: '', address: '', email: '', phone: '', password: '', confirmPassword: '' });
     const [specialties, setSpecialties] = useState<string[]>([]);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -25,7 +25,6 @@ export default function Register() {
                 const activeNames = data.filter(p => p.isActive).map(p => p.name);
                 if (activeNames.length > 0) {
                     setSpecialties(activeNames);
-                    if (!form.specialty) setForm(prev => ({ ...prev, specialty: activeNames[0] }));
                 }
             } catch {
                 setSpecialties([]);
@@ -40,7 +39,28 @@ export default function Register() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // Validación de nombres (solo letras y espacios)
+        const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
+        if (!nameRegex.test(form.firstName)) return setError('El nombre solo debe contener letras.');
+        if (!nameRegex.test(form.lastName)) return setError('El apellido solo debe contener letras.');
+        
+        // Validación de Email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(form.email)) return setError('El formato del correo electrónico no es válido.');
+        
+        // Validación de DNI (7 u 8 números)
+        const dniRegex = /^[0-9]{7,8}$/;
+        if (!dniRegex.test(form.dni)) return setError('El DNI debe tener entre 7 y 8 caracteres numéricos.');
+
+        // Validación de Teléfono (Básico: números, +, -, espacios)
+        const phoneRegex = /^[0-9+\-\s]{6,20}$/;
+        if (form.phone && !phoneRegex.test(form.phone)) return setError('El formato del teléfono no es válido.');
+        
         if (form.password !== form.confirmPassword) return setError('Las contraseñas no coinciden.');
+        if (form.password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres.');
+        if (form.role === 'PROFESSIONAL' && !form.specialty) return setError('Debe seleccionar una especialidad.');
+        
         setLoading(true); setError('');
 
         try {
@@ -49,6 +69,7 @@ export default function Register() {
                     firstName: form.firstName,
                     lastName: form.lastName,
                     dni: form.dni,
+                    dateOfBirth: form.dateOfBirth,
                     address: form.address,
                     email: form.email,
                     phone: form.phone,
@@ -59,6 +80,7 @@ export default function Register() {
                     firstName: form.firstName,
                     lastName: form.lastName,
                     dni: form.dni,
+                    dateOfBirth: form.dateOfBirth,
                     address: form.address,
                     specialty: form.specialty,
                     email: form.email,
@@ -101,6 +123,7 @@ export default function Register() {
                                 {field('Nombre', 'firstName')}
                                 {field('Apellido', 'lastName')}
                                 {field('DNI', 'dni')}
+                                {field('Fecha de nacimiento', 'dateOfBirth', 'date')}
                                 {field('Dirección', 'address')}
                                 {field('Teléfono', 'phone', 'tel')}
                                 {field('Correo electrónico', 'email', 'email')}
@@ -116,6 +139,7 @@ export default function Register() {
                                 {field('Nombre', 'firstName')}
                                 {field('Apellido', 'lastName')}
                                 {field('DNI', 'dni')}
+                                {field('Fecha de nacimiento', 'dateOfBirth', 'date')}
                                 {field('Dirección', 'address')}
                                 {field('Teléfono', 'phone', 'tel')}
                                 <div className="space-y-1">
@@ -127,19 +151,13 @@ export default function Register() {
                                         onChange={handleChange}
                                         className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none text-lg transition-all"
                                     >
-                                        {specialties.length > 0 ? specialties.map(s => <option key={s} value={s}>{s}</option>) : <option value="">Sin especialidades</option>}
+                                        <option value="" disabled>Seleccionar...</option>
+                                        {specialties.map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
+                                {field('Correo electrónico', 'email', 'email')}
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className="block font-semibold text-slate-700 mb-1">Correo electrónico</label>
-                                    <input
-                                        type="email" name="email" required
-                                        className="w-full p-4 border-2 border-slate-200 rounded-xl focus:border-blue-600 focus:ring-4 focus:ring-blue-50 outline-none text-lg transition-all"
-                                        value={form.email} onChange={handleChange}
-                                    />
-                                </div>
                                 {field('Contraseña', 'password', 'password')}
                                 {field('Repetir contraseña', 'confirmPassword', 'password')}
                             </div>

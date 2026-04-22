@@ -10,6 +10,7 @@ public interface IAppointmentService
 {
     Task<AppointmentResponse> CreateAppointmentAsync(CreateAppointmentRequest request);
     Task<bool> CancelAppointmentAsync(Guid id);
+    Task<bool> MarkAsRescheduledAsync(Guid id);
     Task<AppointmentResponse> BlockTimeAsync(BlockTimeRequest request);
     Task<IEnumerable<AppointmentResponse>> GetPatientAppointmentsAsync(Guid patientId);
     Task<IEnumerable<AppointmentResponse>> GetProfessionalAppointmentsAsync(Guid professionalId);
