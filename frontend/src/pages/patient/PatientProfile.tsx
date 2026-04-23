@@ -20,8 +20,8 @@ interface Profile {
 }
 
 export default function PatientProfile() {
-    const [profile, setProfile] = useState<Profile>({ 
-        firstName: '', lastName: '', dni: '', address: '', 
+    const [profile, setProfile] = useState<Profile>({
+        firstName: '', lastName: '', dni: '', address: '',
         email: '', phone: '', insuranceCompany: '', insuranceNumber: '',
         dateOfBirth: ''
     });
@@ -46,7 +46,7 @@ export default function PatientProfile() {
                 const data = r.data;
                 if (data.dateOfBirth) data.dateOfBirth = data.dateOfBirth.substring(0, 10);
                 setProfile(data);
-                setInitialProfile({...data});
+                setInitialProfile({ ...data });
             })
             .catch(() => setError('No se pudo cargar el perfil.'))
             .finally(() => setLoading(false));
@@ -61,11 +61,11 @@ export default function PatientProfile() {
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Per-input validation
         const newErrors: Partial<Record<keyof Profile | 'confirmPassword', string>> = {};
         const requiredFields: (keyof Profile)[] = ['firstName', 'lastName', 'address', 'phone', 'insuranceCompany', 'insuranceNumber', 'dateOfBirth'];
-        
+
         requiredFields.forEach(f => {
             if (!profile[f] || profile[f].toString().trim() === '') {
                 newErrors[f] = 'Campo obligatorio.';
@@ -99,7 +99,7 @@ export default function PatientProfile() {
                 password: passwords.password || null
             });
             localStorage.setItem('firstName', profile.firstName);
-            setInitialProfile({...profile});
+            setInitialProfile({ ...profile });
             setSaved(true);
             setIsEditing(false);
             Swal.fire({
@@ -144,14 +144,14 @@ export default function PatientProfile() {
             setProfile(prev => ({ ...prev, profilePictureUrl: newUrl }));
             if (initialProfile) setInitialProfile({ ...initialProfile, profilePictureUrl: newUrl });
             localStorage.setItem('profilePictureUrl', newUrl);
-            
+
             Swal.fire({
                 title: '¡Foto actualizada!',
                 icon: 'success',
                 timer: 1500,
                 showConfirmButton: false
             });
-        } catch (err) {
+        } catch {
             Swal.fire('Error', 'No se pudo subir la imagen.', 'error');
         } finally {
             setSaving(false);
@@ -159,7 +159,7 @@ export default function PatientProfile() {
     };
 
 
-    const field = (label: string, name: keyof Profile | 'password' | 'confirmPassword', icon: any, type = 'text', readOnly = false) => {
+    const field = (label: string, name: keyof Profile | 'password' | 'confirmPassword', icon: React.ComponentType<{ className?: string }>, type = 'text', readOnly = false) => {
         const Icon = icon;
         const hasError = !!inputErrors[name];
         const isPassword = name === 'password' || name === 'confirmPassword';
@@ -174,20 +174,20 @@ export default function PatientProfile() {
                         <Icon className="w-5 h-5" />
                     </div>
                     <input
-                        type={isPassword ? (showPass ? 'text' : 'password') : type} 
-                        name={name} 
+                        type={isPassword ? (showPass ? 'text' : 'password') : type}
+                        name={name}
                         readOnly={readOnly}
                         placeholder={isPassword ? 'Ingrese su contraseña' : ''}
                         className={`w-full pl-12 pr-12 py-4 bg-slate-50 border rounded-2xl focus:bg-white focus:ring-4 outline-none text-lg transition-all font-medium 
                             ${readOnly ? 'opacity-70 cursor-not-allowed' : ''} 
                             ${hasError ? 'border-red-500 focus:ring-red-50 focus:border-red-500 bg-red-50/10' : 'border-slate-100 focus:ring-emerald-50 focus:border-emerald-500'}`}
-                        value={isPassword ? passwords[name as 'password' | 'confirmPassword'] : (profile[name as keyof Profile] as string)} 
+                        value={isPassword ? passwords[name as 'password' | 'confirmPassword'] : (profile[name as keyof Profile] as string)}
                         onChange={isPassword ? (e) => {
                             handlePasswordChange(e);
-                            if (inputErrors[name]) setInputErrors(prev => ({...prev, [name]: undefined}));
+                            if (inputErrors[name]) setInputErrors(prev => ({ ...prev, [name]: undefined }));
                         } : (e) => {
                             handleChange(e);
-                            if (inputErrors[name]) setInputErrors(prev => ({...prev, [name]: undefined}));
+                            if (inputErrors[name]) setInputErrors(prev => ({ ...prev, [name]: undefined }));
                         }}
                     />
                     {isPassword && !readOnly && (
@@ -215,9 +215,9 @@ export default function PatientProfile() {
                     <div className="relative group">
                         <div className="w-32 h-32 bg-emerald-50 text-emerald-600 rounded-[2.5rem] flex items-center justify-center shadow-inner overflow-hidden border-4 border-white shadow-xl">
                             {profile.profilePictureUrl ? (
-                                <img 
-                                    src={`http://localhost:5005${profile.profilePictureUrl}`} 
-                                    alt="Profile" 
+                                <img
+                                    src={`http://localhost:5005${profile.profilePictureUrl}`}
+                                    alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
                             ) : (
@@ -266,7 +266,7 @@ export default function PatientProfile() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
                         {field('Nombre', 'firstName', User, 'text', !isEditing)}
                         {field('Apellido', 'lastName', User, 'text', !isEditing)}
-                        
+
                         <div>
                             {field('DNI', 'dni', CreditCard, 'text', true)}
                             <p className="mt-2 ml-1 text-[10px] text-slate-400 font-medium italic">* Solo modificable por administración.</p>
@@ -275,7 +275,7 @@ export default function PatientProfile() {
 
                         {field('Dirección', 'address', MapPin, 'text', !isEditing)}
                         {field('Teléfono', 'phone', Phone, 'tel', !isEditing)}
-                        
+
                         {field('Obra Social', 'insuranceCompany', Shield, 'text', !isEditing)}
                         {field('Nro Afiliado', 'insuranceNumber', Fingerprint, 'text', !isEditing)}
 

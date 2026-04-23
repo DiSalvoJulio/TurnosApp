@@ -21,7 +21,7 @@ export default function Register() {
     useEffect(() => {
         const loadSpecialties = async () => {
             try {
-                const { data } = await api.get<any[]>('/professions');
+                const { data } = await api.get<{ isActive: boolean; name: string }[]>('/professions');
                 const activeNames = data.filter(p => p.isActive).map(p => p.name);
                 if (activeNames.length > 0) {
                     setSpecialties(activeNames);
@@ -39,16 +39,16 @@ export default function Register() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         // Validación de nombres (solo letras y espacios)
         const nameRegex = /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/;
         if (!nameRegex.test(form.firstName)) return setError('El nombre solo debe contener letras.');
         if (!nameRegex.test(form.lastName)) return setError('El apellido solo debe contener letras.');
-        
+
         // Validación de Email
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(form.email)) return setError('El formato del correo electrónico no es válido.');
-        
+
         // Validación de DNI (7 u 8 números)
         const dniRegex = /^[0-9]{7,8}$/;
         if (!dniRegex.test(form.dni)) return setError('El DNI debe tener entre 7 y 8 caracteres numéricos.');
@@ -56,11 +56,11 @@ export default function Register() {
         // Validación de Teléfono (Básico: números, +, -, espacios)
         const phoneRegex = /^[0-9+\-\s]{6,20}$/;
         if (form.phone && !phoneRegex.test(form.phone)) return setError('El formato del teléfono no es válido.');
-        
+
         if (form.password !== form.confirmPassword) return setError('Las contraseñas no coinciden.');
         if (form.password.length < 6) return setError('La contraseña debe tener al menos 6 caracteres.');
         if (form.role === 'PROFESSIONAL' && !form.specialty) return setError('Debe seleccionar una especialidad.');
-        
+
         setLoading(true); setError('');
 
         try {
@@ -90,8 +90,9 @@ export default function Register() {
                 });
             }
             navigate('/login');
-        } catch (err: any) {
-            setError(err.response?.data || 'Error al registrarse. Intente nuevamente.');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: string } };
+            setError(error.response?.data || 'Error al registrarse. Intente nuevamente.');
         } finally { setLoading(false); }
     };
 

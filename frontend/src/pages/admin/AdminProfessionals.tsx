@@ -46,19 +46,24 @@ export default function AdminProfessionals() {
     const loadProfessionsList = async () => {
         try {
             const r = await api.get('/professions');
-            setProfessionsList(r.data.filter((p: any) => p.isActive));
-        } catch { }
+            setProfessionsList(r.data.filter((p: { isActive: boolean }) => p.isActive));
+        } catch {
+            // Silently handle error
+        }
     };
 
-    const loadProfs = () => {
+    const loadProfs = async () => {
         setLoading(true);
-        api.get('/users/admin/professionals')
-            .then((r) => setProfs(r.data))
-            .finally(() => setLoading(false));
+        try {
+            const { data } = await api.get('/users/admin/professionals');
+            setProfs(data);
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() => { 
-        loadProfs(); 
+    useEffect(() => {
+        loadProfs();
         loadProfessionsList();
     }, []);
 
@@ -98,8 +103,9 @@ export default function AdminProfessionals() {
             setSelectedId(null);
             setForm(emptyForm);
             loadProfs();
-        } catch (e: any) {
-            Swal.fire('Error', e.response?.data || 'No se pudo actualizar el profesional.', 'error');
+        } catch (e: unknown) {
+            const error = e as { response?: { data?: string } };
+            Swal.fire('Error', error.response?.data || 'No se pudo actualizar el profesional.', 'error');
         }
     };
 
@@ -135,8 +141,9 @@ export default function AdminProfessionals() {
             setForm(emptyForm);
             setIsCreateOpen(false);
             loadProfs();
-        } catch (e: any) {
-            Swal.fire('Error', e.response?.data || 'Error al crear profesional.', 'error');
+        } catch (e: unknown) {
+            const error = e as { response?: { data?: string } };
+            Swal.fire('Error', error.response?.data || 'Error al crear profesional.', 'error');
         }
     };
 
@@ -259,7 +266,7 @@ export default function AdminProfessionals() {
                         <p className="text-slate-500 text-sm font-medium">Administre el staff médico del centro</p>
                     </div>
                 </div>
-                <button 
+                <button
                     onClick={() => {
                         if (isCreateOpen) {
                             cancelAction();
@@ -268,7 +275,7 @@ export default function AdminProfessionals() {
                             setForm(emptyForm);
                             setIsCreateOpen(true);
                         }
-                    }} 
+                    }}
                     className={`${isCreateOpen ? 'bg-slate-500' : 'bg-indigo-600'} text-white px-4 py-2 rounded-xl font-bold transition-all shadow-sm active:scale-95`}
                 >
                     {isCreateOpen ? 'Cerrar' : 'Crear profesional'}
@@ -315,15 +322,15 @@ export default function AdminProfessionals() {
                         <div className="space-y-1 relative">
                             <label className="text-sm font-bold text-slate-600 ml-1">Contraseña</label>
                             <div className="relative">
-                                <input 
-                                    name="password" 
-                                    value={form.password} 
-                                    onChange={updateForm} 
-                                    type={showPassword ? "text" : "password"} 
-                                    placeholder="Contraseña" 
-                                    className="border p-2.5 rounded-xl w-full focus:ring-2 focus:ring-indigo-500 outline-none bg-white pr-10 font-medium" 
+                                <input
+                                    name="password"
+                                    value={form.password}
+                                    onChange={updateForm}
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Contraseña"
+                                    className="border p-2.5 rounded-xl w-full focus:ring-2 focus:ring-indigo-500 outline-none bg-white pr-10 font-medium"
                                 />
-                                <button 
+                                <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
                                     className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition-colors"
@@ -393,22 +400,22 @@ export default function AdminProfessionals() {
                                             </span>
                                         </td>
                                         <td className="p-4 text-right space-x-1">
-                                            <button 
-                                                onClick={() => startEdit(p)} 
+                                            <button
+                                                onClick={() => startEdit(p)}
                                                 disabled={isCreateOpen || (selectedId !== null && selectedId !== p.id)}
                                                 className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${(isCreateOpen || (selectedId !== null && selectedId !== p.id)) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-100 active:scale-95'}`}
                                             >
                                                 Editar
                                             </button>
-                                            <button 
-                                                onClick={() => toggleActive(p)} 
+                                            <button
+                                                onClick={() => toggleActive(p)}
                                                 disabled={isCreateOpen || selectedId !== null}
                                                 className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${(isCreateOpen || selectedId !== null) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : (p.isActive ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200')}`}
                                             >
                                                 {p.isActive ? 'Desactivar' : 'Activar'}
                                             </button>
-                                            <button 
-                                                onClick={() => handleDelete(p)} 
+                                            <button
+                                                onClick={() => handleDelete(p)}
                                                 disabled={isCreateOpen || selectedId !== null}
                                                 className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all ${(isCreateOpen || selectedId !== null) ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-rose-50 text-rose-600 hover:bg-rose-100'}`}
                                             >

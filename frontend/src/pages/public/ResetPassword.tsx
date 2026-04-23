@@ -27,8 +27,9 @@ const ResetPassword = () => {
       });
       setMessage(response.data.message);
       setTimeout(() => navigate('/login'), 2000);
-    } catch (error: any) {
-      setMessage(error.response?.data?.message || 'Error al restablecer la contraseña.');
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      setMessage(err.response?.data?.message || 'Error al restablecer la contraseña.');
     } finally {
       setLoading(false);
     }

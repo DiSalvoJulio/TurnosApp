@@ -52,8 +52,8 @@ export default function ClinicalHistory() {
             const { data } = await api.get(`/history/search?query=${searchTerm}`);
             setPatients(data);
             setSelectedPatient(null);
-        } catch (error) {
-            console.error("Error searching patients:", error);
+        } catch {
+            // Silently handle error
         } finally {
             setLoading(false);
         }
@@ -64,8 +64,8 @@ export default function ClinicalHistory() {
         try {
             const { data } = await api.get(`/history/patient/${patientId}`);
             setSelectedPatient(data);
-        } catch (error) {
-            console.error("Error fetching history:", error);
+        } catch {
+            // Silently handle error
         } finally {
             setLoading(false);
         }
@@ -76,19 +76,19 @@ export default function ClinicalHistory() {
         setSaving(true);
         try {
             await api.put(`/history/evolution/${editingEvolution.id}`, { note: editedNote });
-            
+
             // Update local state
             if (selectedPatient) {
-                const updatedEvolutions = selectedPatient.evolutions.map(evo => 
+                const updatedEvolutions = selectedPatient.evolutions.map(evo =>
                     evo.id === editingEvolution.id ? { ...evo, note: editedNote } : evo
                 );
                 setSelectedPatient({ ...selectedPatient, evolutions: updatedEvolutions });
             }
-            
+
             setEditingEvolution(null);
             setEditedNote('');
-        } catch (error) {
-            console.error("Error updating evolution:", error);
+        } catch {
+            // Silently handle error
         } finally {
             setSaving(false);
         }
@@ -117,9 +117,9 @@ export default function ClinicalHistory() {
                                 onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                             />
                         </div>
-                        <Button 
-                            fullWidth 
-                            onClick={handleSearch} 
+                        <Button
+                            fullWidth
+                            onClick={handleSearch}
                             className="mt-4 rounded-2xl h-14 font-black bg-blue-600 hover:bg-blue-700 shadow-xl shadow-blue-100 flex items-center justify-center gap-2 transition-all active:scale-95"
                         >
                             <Search className="w-5 h-5" />
@@ -133,16 +133,15 @@ export default function ClinicalHistory() {
                                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                             </div>
                         )}
-                        
+
                         {patients.map(p => (
                             <button
                                 key={p.id}
                                 onClick={() => fetchHistory(p.id)}
-                                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-center justify-between group ${
-                                    selectedPatient?.patientId === p.id 
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100' 
+                                className={`w-full text-left p-5 rounded-2xl border transition-all flex items-center justify-between group ${selectedPatient?.patientId === p.id
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100'
                                     : 'bg-white border-slate-100 hover:border-blue-200 text-slate-700'
-                                }`}
+                                    }`}
                             >
                                 <div>
                                     <p className="font-black leading-tight">{p.firstName} {p.lastName}</p>
@@ -182,16 +181,16 @@ export default function ClinicalHistory() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <Button 
-                                        variant="secondary" 
+                                    <Button
+                                        variant="secondary"
                                         className="rounded-xl px-4 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors flex items-center gap-2 border border-slate-200"
                                         onClick={() => window.print()}
                                     >
                                         <Printer className="w-4 h-4" />
                                         Imprimir
                                     </Button>
-                                    <Button 
-                                        variant="secondary" 
+                                    <Button
+                                        variant="secondary"
                                         className="rounded-xl px-4 text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition-colors"
                                         onClick={() => setShowProfileModal(true)}
                                     >
@@ -238,11 +237,11 @@ export default function ClinicalHistory() {
                                         <p className="text-slate-500 font-medium italic mt-1">Este paciente aún no tiene notas clínicas.</p>
                                     </div>
                                 ) : (
-                                    selectedPatient.evolutions.map((evo, idx) => (
+                                    selectedPatient.evolutions.map((evo: { id: string; date: string; note: string; professionalName: string }, idx: number) => (
                                         <div key={evo.id} className="relative group">
                                             {/* Dot */}
                                             <div className={`absolute -left-9 top-1.5 w-4 h-4 rounded-full border-4 border-white shadow-sm ring-4 ring-slate-100 transition-all ${idx === 0 ? 'bg-blue-600 ring-blue-50' : 'bg-slate-300'} print:hidden`}></div>
-                                            
+
                                             <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm transition-all hover:shadow-xl hover:shadow-slate-100 hover:-translate-y-1 print:p-0 print:border-none print:shadow-none print:mb-8 print:break-inside-avoid">
                                                 <div className="flex items-center justify-between mb-4 print:border-b print:pb-2 print:mb-2">
                                                     <div className="flex items-center gap-3">
@@ -252,7 +251,7 @@ export default function ClinicalHistory() {
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <button 
+                                                        <button
                                                             onClick={() => {
                                                                 setEditingEvolution(evo);
                                                                 setEditedNote(evo.note);
@@ -298,7 +297,7 @@ export default function ClinicalHistory() {
                     <div className="bg-white w-full max-w-2xl rounded-[3rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
                         {/* Header del Modal */}
                         <div className="relative h-32 bg-gradient-to-r from-blue-600 to-indigo-700 p-8">
-                            <button 
+                            <button
                                 onClick={() => setShowProfileModal(false)}
                                 className="absolute top-6 right-6 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
                             >
@@ -337,8 +336,8 @@ export default function ClinicalHistory() {
                             </div>
 
                             <div className="mt-10 pt-8 border-t border-slate-50">
-                                <Button 
-                                    fullWidth 
+                                <Button
+                                    fullWidth
                                     onClick={() => setShowProfileModal(false)}
                                     className="rounded-2xl h-14 font-black bg-slate-900 hover:bg-black text-white transition-all shadow-xl shadow-slate-100"
                                 >
@@ -364,7 +363,7 @@ export default function ClinicalHistory() {
                                     Actualice la nota clínica del {format(new Date(editingEvolution.date), "d 'de' MMMM, yyyy", { locale: es })}
                                 </p>
                             </div>
-                            <button 
+                            <button
                                 onClick={() => setEditingEvolution(null)}
                                 className="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-colors shadow-sm"
                             >
@@ -384,14 +383,14 @@ export default function ClinicalHistory() {
                             />
 
                             <div className="mt-8 flex gap-4">
-                                <Button 
+                                <Button
                                     variant="secondary"
                                     onClick={() => setEditingEvolution(null)}
                                     className="flex-1 rounded-2xl h-14 font-black border-2 border-slate-100 hover:bg-slate-50 transition-all"
                                 >
                                     Cancelar
                                 </Button>
-                                <Button 
+                                <Button
                                     onClick={handleUpdateEvolution}
                                     disabled={saving || !editedNote.trim() || editedNote === editingEvolution.note}
                                     className="flex-[2] rounded-2xl h-14 font-black bg-blue-600 hover:bg-blue-700 text-white transition-all shadow-xl shadow-blue-100 flex items-center justify-center gap-2"
@@ -416,7 +415,7 @@ export default function ClinicalHistory() {
 }
 
 // Subcomponente para los campos del perfil
-function ProfileField({ label, value, icon: Icon }: { label: string, value: string, icon: any }) {
+function ProfileField({ label, value, icon: Icon }: { label: string, value: string, icon: React.ComponentType<{ className?: string }> }) {
     return (
         <div className="flex items-start gap-4 group">
             <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors shrink-0">

@@ -24,16 +24,16 @@ export default function ProfessionalPatients() {
     const [message, setMessage] = useState('');
     const [modalOpen, setModalOpen] = useState(false);
     const [editingPatient, setEditingPatient] = useState<PatientRow | null>(null);
-    const [editForm, setEditForm] = useState({ 
-        firstName: '', 
-        lastName: '', 
-        dni: '', 
+    const [editForm, setEditForm] = useState({
+        firstName: '',
+        lastName: '',
+        dni: '',
         dateOfBirth: '',
-        address: '', 
-        phone: '', 
-        email: '', 
-        insuranceCompany: '', 
-        insuranceNumber: '' 
+        address: '',
+        phone: '',
+        email: '',
+        insuranceCompany: '',
+        insuranceNumber: ''
     });
 
     const firstNameRef = useRef<HTMLInputElement>(null);
@@ -42,20 +42,27 @@ export default function ProfessionalPatients() {
 
     const profileId = localStorage.getItem('profileId');
 
-    const loadPatients = () => {
+    const loadPatients = async () => {
         if (!profileId) {
             setMessage('No se encontró ID de profesional.');
             setLoading(false);
             return;
         }
         setLoading(true);
-        api.get(`/users/professional/${profileId}/patients`)
-            .then((r) => setPatients(r.data))
-            .catch(() => setMessage('No se pudieron cargar los pacientes.'))
-            .finally(() => setLoading(false));
+        try {
+            const { data } = await api.get(`/users/professional/${profileId}/patients`);
+            setPatients(data);
+        } catch {
+            setMessage('No se pudieron cargar los pacientes.');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() => { loadPatients(); }, [profileId]);
+    useEffect(() => {
+        loadPatients();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [profileId]);
 
     const normalize = (value: string) => value.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
@@ -93,7 +100,7 @@ export default function ProfessionalPatients() {
 
     const saveEdit = async () => {
         if (!editingPatient) return;
-        
+
         // Validation with focus logic
         if (!editForm.firstName.trim()) {
             firstNameRef.current?.focus();
@@ -120,7 +127,7 @@ export default function ProfessionalPatients() {
                 insuranceCompany: editForm.insuranceCompany,
                 insuranceNumber: editForm.insuranceNumber,
             });
-            
+
             Swal.fire({
                 title: '¡Éxito!',
                 text: 'Paciente actualizado correctamente.',
@@ -128,11 +135,11 @@ export default function ProfessionalPatients() {
                 timer: 1500,
                 showConfirmButton: false
             });
-            
+
             setModalOpen(false);
             setEditingPatient(null);
             loadPatients();
-        } catch (error) {
+        } catch {
             Swal.fire('Error', 'No se pudo actualizar el paciente.', 'error');
         }
     };
@@ -167,7 +174,7 @@ export default function ProfessionalPatients() {
 
             <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden mb-12">
                 {message && <div className="m-6 p-4 bg-amber-50 border border-amber-100 text-amber-700 rounded-2xl font-bold flex items-center gap-3 animate-in fade-in slide-in-from-top-4">{message}</div>}
-                
+
                 {loading ? (
                     <div className="flex flex-col items-center py-20">
                         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mb-4"></div>
@@ -233,26 +240,26 @@ export default function ProfessionalPatients() {
                                 <h2 className="text-2xl font-black text-slate-900 tracking-tight">Editar Paciente</h2>
                                 <p className="text-slate-500 font-medium text-sm mt-1">Actualice la información administrativa.</p>
                             </div>
-                            <button 
-                                onClick={() => { setModalOpen(false); setEditingPatient(null); }} 
+                            <button
+                                onClick={() => { setModalOpen(false); setEditingPatient(null); }}
                                 className="p-2 hover:bg-white rounded-full text-slate-400 hover:text-slate-600 transition-all shadow-sm"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
-                        
+
                         <div className="p-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nombre *</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
+                                        <input
                                             ref={firstNameRef}
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.firstName} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))} 
-                                            placeholder="Nombre" 
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.firstName}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                                            placeholder="Nombre"
                                         />
                                     </div>
                                 </div>
@@ -260,12 +267,12 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Apellido *</label>
                                     <div className="relative">
                                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
+                                        <input
                                             ref={lastNameRef}
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.lastName} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))} 
-                                            placeholder="Apellido" 
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.lastName}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                                            placeholder="Apellido"
                                         />
                                     </div>
                                 </div>
@@ -273,11 +280,11 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">DNI (No editable)</label>
                                     <div className="relative">
                                         <Fingerprint className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200" />
-                                        <input 
+                                        <input
                                             readOnly
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-100 outline-none cursor-not-allowed font-bold text-slate-400" 
-                                            value={editForm.dni} 
-                                            placeholder="DNI" 
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-100 outline-none cursor-not-allowed font-bold text-slate-400"
+                                            value={editForm.dni}
+                                            placeholder="DNI"
                                         />
                                     </div>
                                 </div>
@@ -285,12 +292,12 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fecha de Nacimiento *</label>
                                     <div className="relative">
                                         <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
+                                        <input
                                             ref={dobRef}
                                             type="date"
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700 character-case-upper" 
-                                            value={editForm.dateOfBirth} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, dateOfBirth: e.target.value }))} 
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700 character-case-upper"
+                                            value={editForm.dateOfBirth}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, dateOfBirth: e.target.value }))}
                                         />
                                     </div>
                                 </div>
@@ -298,11 +305,11 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Teléfono</label>
                                     <div className="relative">
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.phone} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))} 
-                                            placeholder="Teléfono" 
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.phone}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, phone: e.target.value }))}
+                                            placeholder="Teléfono"
                                         />
                                     </div>
                                 </div>
@@ -310,11 +317,11 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Dirección</label>
                                     <div className="relative">
                                         <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.address} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, address: e.target.value }))} 
-                                            placeholder="Dirección" 
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.address}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, address: e.target.value }))}
+                                            placeholder="Dirección"
                                         />
                                     </div>
                                 </div>
@@ -322,11 +329,11 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Obra Social</label>
                                     <div className="relative">
                                         <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.insuranceCompany} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, insuranceCompany: e.target.value }))} 
-                                            placeholder="Obra Social" 
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.insuranceCompany}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, insuranceCompany: e.target.value }))}
+                                            placeholder="Obra Social"
                                         />
                                     </div>
                                 </div>
@@ -334,11 +341,11 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nro Afiliado</label>
                                     <div className="relative">
                                         <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
-                                        <input 
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700" 
-                                            value={editForm.insuranceNumber} 
-                                            onChange={(e) => setEditForm((prev) => ({ ...prev, insuranceNumber: e.target.value }))} 
-                                            placeholder="Número de Afiliado" 
+                                        <input
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 outline-none focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all font-bold text-slate-700"
+                                            value={editForm.insuranceNumber}
+                                            onChange={(e) => setEditForm((prev) => ({ ...prev, insuranceNumber: e.target.value }))}
+                                            placeholder="Número de Afiliado"
                                         />
                                     </div>
                                 </div>
@@ -346,16 +353,16 @@ export default function ProfessionalPatients() {
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Email (No editable)</label>
                                     <div className="relative">
                                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-200" />
-                                        <input 
+                                        <input
                                             readOnly
-                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-100 outline-none cursor-not-allowed font-bold text-slate-400" 
-                                            value={editForm.email} 
-                                            placeholder="Email" 
+                                            className="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-100 border border-slate-100 outline-none cursor-not-allowed font-bold text-slate-400"
+                                            value={editForm.email}
+                                            placeholder="Email"
                                         />
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="mt-10 flex gap-4">
                                 <button onClick={saveEdit} className="flex-[2] bg-indigo-600 hover:bg-indigo-700 text-white font-black py-4 rounded-2xl shadow-xl shadow-indigo-100 transition-all active:scale-95 text-lg">Guardar Cambios</button>
                                 <button onClick={() => { setModalOpen(false); setEditingPatient(null); }} className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold py-4 rounded-2xl transition-all active:scale-95 text-lg">Cancelar</button>

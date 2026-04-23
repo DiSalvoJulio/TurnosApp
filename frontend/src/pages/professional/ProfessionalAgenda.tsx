@@ -3,7 +3,7 @@ import { format, parseISO, addDays, startOfWeek, isSameDay, isBefore, startOfDay
 import { es } from 'date-fns/locale';
 import api from '../../services/api';
 import { Button } from '../../components/ui/Button';
-import { Clock, User, Trash2, ChevronLeft, ChevronRight, AlertCircle, ClipboardList, Calendar, Bell } from 'lucide-react';
+import { Clock, User, Trash2, ChevronLeft, ChevronRight, ClipboardList, Calendar, Bell } from 'lucide-react';
 import clsx from 'clsx';
 import Swal from 'sweetalert2';
 
@@ -28,6 +28,7 @@ export default function ProfessionalAgenda() {
 
     useEffect(() => {
         fetchAppointments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -45,8 +46,8 @@ export default function ProfessionalAgenda() {
         try {
             const { data } = await api.get(`/appointments/professional/${profId}`);
             setAppointments(data);
-        } catch (error) {
-            console.error("Error fetching appointments:", error);
+        } catch {
+            // Silently handle error
         } finally {
             setLoading(false);
         }
@@ -85,7 +86,7 @@ export default function ProfessionalAgenda() {
                 icon: 'success',
                 confirmButtonColor: '#2563eb'
             });
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: 'Error',
                 text: 'Error al cancelar el turno',
@@ -96,7 +97,7 @@ export default function ProfessionalAgenda() {
     };
 
     const handleAttend = async (app: Appointment) => {
-        const { value: note } = await Swal.fire({
+        const { value: note } = await Swal.fire<string>({
             title: `Evolución: ${app.patientName}`,
             input: 'textarea',
             inputPlaceholder: 'Escriba las notas de la consulta aquí...',
@@ -140,7 +141,7 @@ export default function ProfessionalAgenda() {
                     icon: 'success',
                     confirmButtonColor: '#3b82f6'
                 });
-            } catch (error) {
+            } catch {
                 Swal.fire('Error', 'No se pudo guardar la evolución.', 'error');
             }
         }
@@ -190,7 +191,7 @@ export default function ProfessionalAgenda() {
             let patientId = '';
             let patientName = '';
 
-            const exactMatch = searchResults.find((p: any) => p.dni === dni);
+            const exactMatch = searchResults.find((p: { dni: string; id: string; firstName: string; lastName: string }) => p.dni === dni);
 
             if (exactMatch) {
                 patientId = exactMatch.id;
@@ -205,7 +206,7 @@ export default function ProfessionalAgenda() {
                     confirmButtonText: 'Sí, continuar',
                     cancelButtonText: 'Cancelar'
                 });
-                
+
                 if (!confirmPat.isConfirmed) return;
             } else {
                 // 2. Registrar paciente nuevo
@@ -249,10 +250,10 @@ export default function ProfessionalAgenda() {
                         address: 'Registrado por profesional',
                         password: '123'
                     });
-                    
+
                     // Ya registrado, lo buscamos de nuevo para obtener el ID
                     const { data: newSearch } = await api.get(`/history/search?query=${dni}`);
-                    const newPat = newSearch.find((p: any) => p.dni === dni);
+                    const newPat = newSearch.find((p: { dni: string; id: string; firstName: string; lastName: string }) => p.dni === dni);
                     patientId = newPat.id;
                     patientName = `${newPat.firstName} ${newPat.lastName}`;
                 } else return;
@@ -269,7 +270,7 @@ export default function ProfessionalAgenda() {
             if (!dateStr) return;
 
             const { data: slots } = await api.get(`/appointments/available-slots?profId=${profId}&date=${dateStr}`);
-            
+
             if (!slots || slots.length === 0) {
                 Swal.fire('No hay horarios', 'No hay horarios disponibles para la fecha seleccionada.', 'info');
                 return;
@@ -278,8 +279,8 @@ export default function ProfessionalAgenda() {
             const { value: slotIndex } = await Swal.fire({
                 title: 'Seleccionar Horario',
                 input: 'select',
-                inputOptions: slots.reduce((acc: any, s: string, i: number) => {
-                    acc[i] = s + " hs";
+                inputOptions: slots.reduce((acc: Record<string, string>, s: string, i: number) => {
+                    acc[i.toString()] = s + " hs";
                     return acc;
                 }, {}),
                 inputPlaceholder: 'Seleccione un horario...',
@@ -293,7 +294,7 @@ export default function ProfessionalAgenda() {
 
             if (slotIndex !== undefined && slotIndex !== null && slotIndex !== "") {
                 const selectedSlot = slots[parseInt(slotIndex)];
-                
+
                 // Calcular EndTime (start + 30min)
                 const [h, m] = selectedSlot.split(':').map(Number);
                 const endM = m + 30;
@@ -318,8 +319,9 @@ export default function ProfessionalAgenda() {
                 fetchAppointments(); // Recargar agenda
             }
 
-        } catch (error: any) {
-            Swal.fire('Error', error.response?.data || 'Ocurrió un error inesperado.', 'error');
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: string } };
+            Swal.fire('Error', err.response?.data || 'Ocurrió un error inesperado.', 'error');
         }
     };
 
@@ -359,7 +361,7 @@ export default function ProfessionalAgenda() {
                             <p className="text-amber-700 font-medium text-sm">Hay citas pasadas esperando ser finalizadas.</p>
                         </div>
                     </div>
-                    <Button 
+                    <Button
                         onClick={handleGoToPastPending}
                         className="bg-amber-600 hover:bg-amber-700 text-white font-black px-5 h-10 rounded-xl shadow-md shadow-amber-100 transition-all active:scale-95 whitespace-nowrap text-sm"
                     >
@@ -450,105 +452,105 @@ export default function ProfessionalAgenda() {
                 ) : (
                     <div className="grid grid-cols-1 gap-3">
                         {filteredAppointments.map(app => {
-                                                            const isCancelled = app.status === 'CANCELLED' || app.status === 'RESCHEDULED';
-                                                            const isRescheduled = app.status === 'RESCHEDULED';
-                                                            const isCompleted = app.status === 'COMPLETED';
-                                                            const appDate = parseISO(app.appointmentDate);
-                                                            const isPast = isBefore(appDate, startOfDay(new Date()));
-                                                            const isPastPending = isPast && !isCancelled && !isCompleted;
-                                                            const timeStr = app.startTime ? app.startTime.substring(0, 5) : '--:--';
+                            const isCancelled = app.status === 'CANCELLED' || app.status === 'RESCHEDULED';
+                            const isRescheduled = app.status === 'RESCHEDULED';
+                            const isCompleted = app.status === 'COMPLETED';
+                            const appDate = parseISO(app.appointmentDate);
+                            const isPast = isBefore(appDate, startOfDay(new Date()));
+                            const isPastPending = isPast && !isCancelled && !isCompleted;
+                            const timeStr = app.startTime ? app.startTime.substring(0, 5) : '--:--';
 
-                                                            return (
-                                                                <div
-                                                                    key={app.id}
-                                                                    className={clsx(
-                                                                        "group p-4 rounded-3xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden",
-                                                                        isCancelled
-                                                                            ? "bg-slate-50/50 border-slate-100 opacity-60 grayscale-[0.5]"
-                                                                            : isPastPending
-                                                                                ? "bg-amber-50/50 border-amber-100 shadow-sm"
-                                                                                : "bg-white border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100"
-                                                                    )}
-                                                                >
-                                                                    {(isPastPending || isRescheduled) && <div className={clsx("absolute top-0 left-0 w-1.5 h-full", isRescheduled ? "bg-amber-400" : "bg-amber-500")}></div>}
+                            return (
+                                <div
+                                    key={app.id}
+                                    className={clsx(
+                                        "group p-4 rounded-3xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative overflow-hidden",
+                                        isCancelled
+                                            ? "bg-slate-50/50 border-slate-100 opacity-60 grayscale-[0.5]"
+                                            : isPastPending
+                                                ? "bg-amber-50/50 border-amber-100 shadow-sm"
+                                                : "bg-white border-slate-100 shadow-sm hover:shadow-lg hover:shadow-slate-100 hover:border-blue-100"
+                                    )}
+                                >
+                                    {(isPastPending || isRescheduled) && <div className={clsx("absolute top-0 left-0 w-1.5 h-full", isRescheduled ? "bg-amber-400" : "bg-amber-500")}></div>}
 
-                                                                    <div className="flex items-center gap-4">
-                                                                        <div className={clsx(
-                                                                            "w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors shadow-sm shrink-0",
-                                                                            isCancelled && !isRescheduled ? "bg-slate-200 text-slate-500" : 
-                                                                            isRescheduled ? "bg-amber-50 text-amber-600" :
-                                                                            isPastPending ? "bg-amber-100 text-amber-700 font-black" :
-                                                                            "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
-                                                                        )}>
-                                                                            <span className="text-[10px] font-black leading-none mb-0.5">HS</span>
-                                                                            <span className="text-lg font-black tabular-nums tracking-tight">{timeStr}</span>
-                                                                        </div>
+                                    <div className="flex items-center gap-4">
+                                        <div className={clsx(
+                                            "w-14 h-14 rounded-2xl flex flex-col items-center justify-center transition-colors shadow-sm shrink-0",
+                                            isCancelled && !isRescheduled ? "bg-slate-200 text-slate-500" :
+                                                isRescheduled ? "bg-amber-50 text-amber-600" :
+                                                    isPastPending ? "bg-amber-100 text-amber-700 font-black" :
+                                                        "bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white"
+                                        )}>
+                                            <span className="text-[10px] font-black leading-none mb-0.5">HS</span>
+                                            <span className="text-lg font-black tabular-nums tracking-tight">{timeStr}</span>
+                                        </div>
 
-                                                                        <div>
-                                                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                                                                <h3 className={clsx(
-                                                                                    "text-lg font-black tracking-tight leading-none transition-colors",
-                                                                                    isCancelled && !isRescheduled ? "text-slate-400" : "text-slate-900 group-hover:text-blue-700"
-                                                                                )}>
-                                                                                    {app.patientName}
-                                                                                </h3>
-                                                                                <div className="flex gap-1.5">
-                                                                                    <span className={clsx(
-                                                                                        "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border",
-                                                                                        isRescheduled ? "bg-amber-50 text-amber-600 border-amber-100" :
-                                                                                        isCancelled ? "bg-red-50 text-red-600 border-red-100" :
-                                                                                        isCompleted ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
-                                                                                        isPastPending ? "bg-amber-100 text-amber-700 border-amber-200" :
-                                                                                        "bg-blue-50 text-blue-600 border-blue-100"
-                                                                                    )}>
-                                                                                        {isRescheduled ? 'Reprogramado' : isCancelled ? 'Cancelado' : isCompleted ? 'Finalizado' : isPastPending ? 'Pte. Pasado' : 'Confirmado'}
-                                                                                    </span>
-                                                                                </div>
-                                                                            </div>
-                                                                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
-                                                                                <User className="w-3 h-3" /> Paciente #{app.patientId?.substring(0, 8)}
-                                                                            </p>
-                                                                        </div>
-                                                                    </div>
+                                        <div>
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                                <h3 className={clsx(
+                                                    "text-lg font-black tracking-tight leading-none transition-colors",
+                                                    isCancelled && !isRescheduled ? "text-slate-400" : "text-slate-900 group-hover:text-blue-700"
+                                                )}>
+                                                    {app.patientName}
+                                                </h3>
+                                                <div className="flex gap-1.5">
+                                                    <span className={clsx(
+                                                        "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border",
+                                                        isRescheduled ? "bg-amber-50 text-amber-600 border-amber-100" :
+                                                            isCancelled ? "bg-red-50 text-red-600 border-red-100" :
+                                                                isCompleted ? "bg-emerald-50 text-emerald-600 border-emerald-100" :
+                                                                    isPastPending ? "bg-amber-100 text-amber-700 border-amber-200" :
+                                                                        "bg-blue-50 text-blue-600 border-blue-100"
+                                                    )}>
+                                                        {isRescheduled ? 'Reprogramado' : isCancelled ? 'Cancelado' : isCompleted ? 'Finalizado' : isPastPending ? 'Pte. Pasado' : 'Confirmado'}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <p className="text-slate-400 font-bold text-[10px] uppercase tracking-widest flex items-center gap-1.5">
+                                                <User className="w-3 h-3" /> Paciente #{app.patientId?.substring(0, 8)}
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-                                                                        {!isCancelled && !isCompleted && !isRescheduled && (
-                                                                            <>
-                                                                                <Button
-                                                                                    onClick={() => handleAttend(app)}
-                                                                                    className={clsx(
-                                                                                        "w-full sm:w-auto rounded-xl px-4 h-10 font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs",
-                                                                                        isPastPending ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
-                                                                                    )}
-                                                                                >
-                                                                                    <ClipboardList className="w-4 h-4 flex-shrink-0" />
-                                                                                    <span>{isPastPending ? 'Finalizar' : 'Atender'}</span>
-                                                                                </Button>
-                                                                                <Button
-                                                                                    variant="danger"
-                                                                                    onClick={() => handleCancel(app.id)}
-                                                                                    className="w-full sm:w-auto rounded-xl px-4 h-10 font-bold transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs"
-                                                                                >
-                                                                                    <Trash2 className="w-4 h-4 flex-shrink-0" />
-                                                                                    <span>Cancelar</span>
-                                                                                </Button>
-                                                                            </>
-                                                                        )}
-                                                                        {isCompleted && (
-                                                                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 w-full sm:w-auto">
-                                                                                 <ClipboardList className="w-4 h-4 flex-shrink-0" />
-                                                                                 Finalizado
-                                                                             </div>
-                                                                        )}
-                                                                        {isRescheduled && (
-                                                                             <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-100 w-full sm:w-auto">
-                                                                                 <Calendar className="w-4 h-4 flex-shrink-0" />
-                                                                                 Reprogramado
-                                                                             </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            );
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                                        {!isCancelled && !isCompleted && !isRescheduled && (
+                                            <>
+                                                <Button
+                                                    onClick={() => handleAttend(app)}
+                                                    className={clsx(
+                                                        "w-full sm:w-auto rounded-xl px-4 h-10 font-black transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs",
+                                                        isPastPending ? "bg-amber-600 hover:bg-amber-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"
+                                                    )}
+                                                >
+                                                    <ClipboardList className="w-4 h-4 flex-shrink-0" />
+                                                    <span>{isPastPending ? 'Finalizar' : 'Atender'}</span>
+                                                </Button>
+                                                <Button
+                                                    variant="danger"
+                                                    onClick={() => handleCancel(app.id)}
+                                                    className="w-full sm:w-auto rounded-xl px-4 h-10 font-bold transition-all active:scale-95 shadow-md flex items-center justify-center gap-2 text-xs"
+                                                >
+                                                    <Trash2 className="w-4 h-4 flex-shrink-0" />
+                                                    <span>Cancelar</span>
+                                                </Button>
+                                            </>
+                                        )}
+                                        {isCompleted && (
+                                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-emerald-100 w-full sm:w-auto">
+                                                <ClipboardList className="w-4 h-4 flex-shrink-0" />
+                                                Finalizado
+                                            </div>
+                                        )}
+                                        {isRescheduled && (
+                                            <div className="flex items-center justify-center gap-2 px-4 py-2 bg-amber-50 text-amber-600 rounded-xl font-black text-[10px] uppercase tracking-widest border border-amber-100 w-full sm:w-auto">
+                                                <Calendar className="w-4 h-4 flex-shrink-0" />
+                                                Reprogramado
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
                         })}
                     </div>
                 )}

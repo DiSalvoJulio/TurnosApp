@@ -25,6 +25,7 @@ export default function PatientDashboard() {
 
     useEffect(() => {
         fetchAppointments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchAppointments = async () => {
@@ -32,8 +33,8 @@ export default function PatientDashboard() {
         try {
             const { data } = await api.get(`/appointments/patient/${patientId}`);
             setAppointments(data);
-        } catch (e) {
-            console.error(e);
+        } catch {
+            // Silently handle error
         } finally {
             setLoading(false);
         }
@@ -42,18 +43,18 @@ export default function PatientDashboard() {
     const upcoming = appointments.filter(a => {
         try {
             const status = a.status?.toUpperCase();
-            return status !== 'CANCELLED' && 
-                   status !== 'COMPLETED' && 
-                   status !== 'RESCHEDULED' && 
-                   a.appointmentDate && 
-                   (isFuture(parseISO(a.appointmentDate)) || format(new Date(), 'yyyy-MM-dd') === a.appointmentDate.split('T')[0]);
-        } catch (e) {
+            return status !== 'CANCELLED' &&
+                status !== 'COMPLETED' &&
+                status !== 'RESCHEDULED' &&
+                a.appointmentDate &&
+                (isFuture(parseISO(a.appointmentDate)) || format(new Date(), 'yyyy-MM-dd') === a.appointmentDate.split('T')[0]);
+        } catch {
             return false;
         }
     }).sort((a, b) => {
         try {
             return new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime();
-        } catch (e) {
+        } catch {
             return 0;
         }
     });

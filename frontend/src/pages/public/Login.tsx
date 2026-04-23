@@ -48,8 +48,9 @@ export default function Login() {
             else if (data.role === 'PROFESSIONAL') navigate('/professional/dashboard');
             else if (data.role === 'ADMIN') navigate('/admin/dashboard');
             else navigate('/');
-        } catch (err: any) {
-            const message = err?.response?.data ?? 'Credenciales inválidas o error de conexión.';
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: string } };
+            const message = error?.response?.data ?? 'Credenciales inválidas o error de conexión.';
             setError(typeof message === 'string' ? message : 'Credenciales inválidas o error de conexión.');
         } finally {
             setLoading(false);
@@ -58,7 +59,7 @@ export default function Login() {
 
     const handleRecoverySubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(recoveryEmail)) {
             Swal.fire('Error', 'El formato del correo electrónico no es válido.', 'error');
@@ -75,7 +76,7 @@ export default function Login() {
                 confirmButtonColor: '#3b82f6'
             });
             setForgotPasswordMode(false);
-        } catch (err) {
+        } catch {
             Swal.fire({
                 title: 'Error',
                 text: 'Hubo un problema al procesar tu solicitud.',
@@ -230,7 +231,7 @@ export default function Login() {
                                     </form>
 
                                     <div className="text-center">
-                                        <button 
+                                        <button
                                             onClick={() => setForgotPasswordMode(false)}
                                             className="text-slate-400 font-bold hover:text-slate-900 transition-colors text-sm uppercase tracking-widest"
                                         >
@@ -304,9 +305,9 @@ export default function Login() {
                                                 <button onClick={() => navigate(`/register?role=${roleMode}`)} className={`${roleMode === 'PROFESSIONAL' ? 'text-blue-600 hover:text-blue-700' : 'text-emerald-600 hover:text-emerald-700'} hover:underline`}>Registrate ahora</button>
                                             </p>
                                         )}
-                                        
+
                                         <div className="text-center">
-                                            <button 
+                                            <button
                                                 onClick={() => setForgotPasswordMode(true)}
                                                 className="text-slate-400 font-bold hover:text-slate-600 transition-colors text-xs uppercase tracking-widest border-b border-transparent hover:border-slate-300 pb-0.5"
                                             >
