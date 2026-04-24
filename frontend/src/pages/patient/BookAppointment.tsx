@@ -48,8 +48,8 @@ export default function BookAppointment() {
                     }
                 }
             })
-            .catch(err => {
-                if (err.response?.status !== 401) {
+            .catch((error: { response?: { status?: number } }) => {
+                if (error.response?.status !== 401) {
                     Swal.fire({
                         title: 'Error',
                         text: 'Error cargando profesionales. Verifique conexión al servidor API.',
@@ -63,21 +63,25 @@ export default function BookAppointment() {
 
     useEffect(() => {
         if (!selectedProf) return;
-        
+
         // Cargar configuración del profesional (Sábados)
         api.get(`/appointments/professional/settings/${selectedProf}`)
             .then(res => setWorksSaturdays(res.data.worksWeekends))
-            .catch(err => console.error("Error fetching prof settings:", err));
+            .catch(() => {
+                // Silently handle error
+            });
 
         // Cargar bloqueos (para identificar días deshabilitados por completo)
         api.get(`/appointments/professional/${selectedProf}`)
             .then(res => {
                 const fullDayBlocks = res.data
-                    .filter((a: any) => a.status === 'BLOCKED' && a.startTime === '00:00:00' && a.endTime === '23:59:00')
-                    .map((a: any) => a.appointmentDate.split('T')[0]);
+                    .filter((a: { status: string; startTime: string; endTime: string; appointmentDate: string }) => a.status === 'BLOCKED' && a.startTime === '00:00:00' && a.endTime === '23:59:00')
+                    .map((a: { appointmentDate: string }) => a.appointmentDate.split('T')[0]);
                 setBlockedDates(fullDayBlocks);
             })
-            .catch(err => console.error("Error fetching prof blocks:", err));
+            .catch(() => {
+                // Silently handle error
+            });
     }, [selectedProf]);
 
     useEffect(() => {
@@ -85,8 +89,7 @@ export default function BookAppointment() {
             setLoading(true);
             api.get(`/appointments/available-slots?profId=${selectedProf}&date=${selectedDate}`)
                 .then(res => setAvailableSlots(res.data))
-                .catch(err => {
-                    console.error("Error fetching slots:", err);
+                .catch(() => {
                     Swal.fire({
                         title: 'Error',
                         text: 'Error al cargar horarios disponibles. Intente de nuevo.',
@@ -124,13 +127,13 @@ export default function BookAppointment() {
             if (editState?.appointmentIdToCancel) {
                 try {
                     await api.put(`/appointments/${editState.appointmentIdToCancel}/reschedule-mark`);
-                } catch (cancelError) {
-                    console.error("Error marcando el turno anterior como reprogramado", cancelError);
+                } catch {
+                    // Silently handle error
                 }
             }
 
             setSuccess(true);
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: 'Error',
                 text: 'Error al confirmar el turno.',
@@ -153,8 +156,8 @@ export default function BookAppointment() {
                     <p className="text-slate-900 font-black text-lg">{professionals.find(p => p.id === selectedProf)?.firstName} {professionals.find(p => p.id === selectedProf)?.lastName}</p>
                     <p className="text-emerald-600 font-black text-xs uppercase tracking-widest mb-3">{selectedSpecialty}</p>
                     <p className="text-slate-500 font-bold text-sm border-t border-slate-200 pt-3">
-                        {format(new Date(selectedDate.split('-').map(Number)[0], selectedDate.split('-').map(Number)[1]-1, selectedDate.split('-').map(Number)[2]), "EEEE d 'de' MMMM", { locale: es })}
-                        <br/>a las {selectedSlot} hs
+                        {format(new Date(selectedDate.split('-').map(Number)[0], selectedDate.split('-').map(Number)[1] - 1, selectedDate.split('-').map(Number)[2]), "EEEE d 'de' MMMM", { locale: es })}
+                        <br />a las {selectedSlot} hs
                     </p>
                 </div>
                 <p className="text-slate-400 text-sm font-medium max-w-md mx-auto mb-10">Su cita ha sido registrada exitosamente. Ya puede verla en sus próximos turnos.</p>
@@ -263,12 +266,12 @@ export default function BookAppointment() {
                         min={format(new Date(new Date().setDate(new Date().getDate() + 1)), 'yyyy-MM-dd')}
                         className="w-full p-3 sm:p-4 text-base border-2 border-slate-50 rounded-xl bg-slate-50 focus:bg-white focus:border-emerald-600 outline-none transition-all font-bold text-slate-700 box-border truncate"
                         value={selectedDate}
-                        onChange={(e) => { 
+                        onChange={(e) => {
                             const dateStr = e.target.value;
                             if (!dateStr) return;
                             const [year, month, day] = dateStr.split('-').map(Number);
                             const date = new Date(year, month - 1, day);
-                            
+
                             if (date.getDay() === 0) {
                                 Swal.fire({ title: 'Día no disponible', text: 'El centro permanece cerrado los domingos.', icon: 'info', confirmButtonColor: '#10b981' });
                                 setSelectedDate('');
@@ -281,54 +284,54 @@ export default function BookAppointment() {
                             } else {
                                 setSelectedDate(dateStr);
                             }
-                            setSelectedSlot(''); 
+                            setSelectedSlot('');
                         }}
                     />
                 </section>
             </div>
 
-                {/* Paso 4: Horarios */}
-                {selectedDate && (
-                    <section className="bg-white p-5 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500 mb-24 relative overflow-hidden group">
-                        <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        <label className="flex items-center gap-3 sm:gap-4 text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-4 sm:mb-6">
-                            <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-indigo-50 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
-                                <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
-                            </div>
-                            <span>4. Horarios Disponibles</span>
-                        </label>
+            {/* Paso 4: Horarios */}
+            {selectedDate && (
+                <section className="bg-white p-5 sm:p-8 rounded-[2.5rem] border border-slate-100 shadow-sm animate-in fade-in slide-in-from-bottom-8 duration-500 mb-24 relative overflow-hidden group">
+                    <div className="absolute top-0 left-0 w-2 h-full bg-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <label className="flex items-center gap-3 sm:gap-4 text-xl sm:text-2xl font-black text-slate-800 tracking-tight mb-4 sm:mb-6">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0 bg-indigo-50 text-indigo-600 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                            <Clock className="w-6 h-6 sm:w-7 sm:h-7" />
+                        </div>
+                        <span>4. Horarios Disponibles</span>
+                    </label>
 
-                        {loading ? (
-                            <div className="flex flex-col items-center py-12">
-                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
-                                <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Buscando disponibildiad...</p>
-                            </div>
-                        ) : availableSlots.length > 0 ? (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                                {availableSlots.map(slot => (
-                                    <button
-                                        key={slot}
-                                        onClick={() => setSelectedSlot(slot)}
-                                        className={clsx(
-                                            "p-5 rounded-2xl border-2 text-center text-xl font-black transition-all shadow-sm active:scale-95",
-                                            selectedSlot === slot
-                                                ? "border-emerald-600 bg-emerald-600 text-white shadow-emerald-100 rotate-1"
-                                                : "border-slate-50 bg-slate-50 text-slate-500 hover:border-emerald-200 hover:bg-white hover:text-emerald-700"
-                                        )}
-                                    >
-                                        {slot}
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="bg-slate-50/50 p-12 rounded-[2rem] text-center border-2 border-dashed border-slate-100">
-                                <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                                <p className="font-black text-slate-800 text-xl tracking-tight">No hay horarios para este día</p>
-                                <p className="text-slate-500 font-medium">Por favor, seleccioná otra fecha para ver más opciones.</p>
-                            </div>
-                        )}
-                    </section>
-                )}
+                    {loading ? (
+                        <div className="flex flex-col items-center py-12">
+                            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600 mb-4"></div>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Buscando disponibildiad...</p>
+                        </div>
+                    ) : availableSlots.length > 0 ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            {availableSlots.map(slot => (
+                                <button
+                                    key={slot}
+                                    onClick={() => setSelectedSlot(slot)}
+                                    className={clsx(
+                                        "p-5 rounded-2xl border-2 text-center text-xl font-black transition-all shadow-sm active:scale-95",
+                                        selectedSlot === slot
+                                            ? "border-emerald-600 bg-emerald-600 text-white shadow-emerald-100 rotate-1"
+                                            : "border-slate-50 bg-slate-50 text-slate-500 hover:border-emerald-200 hover:bg-white hover:text-emerald-700"
+                                    )}
+                                >
+                                    {slot}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-slate-50/50 p-12 rounded-[2rem] text-center border-2 border-dashed border-slate-100">
+                            <Clock className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                            <p className="font-black text-slate-800 text-xl tracking-tight">No hay horarios para este día</p>
+                            <p className="text-slate-500 font-medium">Por favor, seleccioná otra fecha para ver más opciones.</p>
+                        </div>
+                    )}
+                </section>
+            )}
 
 
             {selectedSlot && (

@@ -17,15 +17,21 @@ export default function AdminProfessions() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editName, setEditName] = useState('');
 
-    const loadProfessions = () => {
+    const loadProfessions = async () => {
         setLoading(true);
-        api.get('/professions')
-            .then((r) => setProfessions(r.data))
-            .catch(() => Swal.fire('Error', 'No se pudieron cargar las especialidades', 'error'))
-            .finally(() => setLoading(false));
+        try {
+            const { data } = await api.get('/professions');
+            setProfessions(data);
+        } catch {
+            Swal.fire('Error', 'No se pudieron cargar las especialidades', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
-    useEffect(() => { loadProfessions(); }, []);
+    useEffect(() => {
+        loadProfessions();
+    }, []);
 
     const handleCreate = async () => {
         const name = newProfessionName.trim();
@@ -58,8 +64,9 @@ export default function AdminProfessions() {
                 showConfirmButton: false
             });
             loadProfessions();
-        } catch (err: any) {
-            Swal.fire('Error', err.response?.data || 'No se pudo crear la especialidad.', 'error');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: string } };
+            Swal.fire('Error', error.response?.data || 'No se pudo crear la especialidad.', 'error');
         }
     };
 
@@ -97,8 +104,9 @@ export default function AdminProfessions() {
             setEditingId(null);
             Swal.fire('Actualizado', 'La especialidad se actualizó correctamente.', 'success');
             loadProfessions();
-        } catch (err: any) {
-            Swal.fire('Error', err.response?.data || 'Error al actualizar.', 'error');
+        } catch (err: unknown) {
+            const error = err as { response?: { data?: string } };
+            Swal.fire('Error', error.response?.data || 'Error al actualizar.', 'error');
         }
     };
 

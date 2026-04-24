@@ -35,7 +35,7 @@ export default function ProfessionalSchedule() {
     const [blocks, setBlocks] = useState<BlockSlot[]>([]);
     const [loading, setLoading] = useState(true);
     const [showBlockForm, setShowBlockForm] = useState(false);
-    
+
     // Config states
     const [worksWeekends, setWorksWeekends] = useState(true);
     const [appointmentDuration, setAppointmentDuration] = useState(30);
@@ -49,20 +49,23 @@ export default function ProfessionalSchedule() {
     const profId = localStorage.getItem('profileId');
 
     useEffect(() => {
-        fetchBlocks();
-        fetchSettings();
-    }, []);
+        if (profId) {
+            fetchBlocks();
+            fetchSettings();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [profId]);
 
     const fetchBlocks = async () => {
         setLoading(true);
         try {
             const { data } = await api.get(`/appointments/professional/${profId}`);
             const filteredBlocks = data
-                .filter((app: any) => app.status === 'BLOCKED')
-                .sort((a: any, b: any) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
+                .filter((app: { status: string; appointmentDate: string }) => app.status === 'BLOCKED')
+                .sort((a: { appointmentDate: string }, b: { appointmentDate: string }) => new Date(a.appointmentDate).getTime() - new Date(b.appointmentDate).getTime());
             setBlocks(filteredBlocks);
-        } catch (error) {
-            console.error("Error fetching blocks:", error);
+        } catch {
+            // Silently handle error
         } finally {
             setLoading(false);
         }
@@ -74,15 +77,15 @@ export default function ProfessionalSchedule() {
             setWorksWeekends(data.worksWeekends);
             setAppointmentDuration(data.appointmentDuration);
             setWorkingHours(data.workingHours || []);
-        } catch (error) {
-            console.error("Error fetching settings:", error);
+        } catch {
+            // Silently handle error
         }
     };
 
     const handleSaveSchedule = async () => {
         // Validación de superposición o errores en horarios
         for (const day of [1, 2, 3, 4, 5, 6]) {
-            const dayHours = workingHours.filter((wh) => wh.dayOfWeek === day);
+            const dayHours = workingHours.filter((wh: { dayOfWeek: number }) => wh.dayOfWeek === day);
             for (let i = 0; i < dayHours.length; i++) {
                 const current = dayHours[i];
                 if (current.startTime >= current.endTime) {
@@ -119,12 +122,12 @@ export default function ProfessionalSchedule() {
         }
 
         try {
-            await api.patch(`/appointments/professional/settings/${profId}`, { 
+            await api.patch(`/appointments/professional/settings/${profId}`, {
                 worksWeekends,
                 appointmentDuration,
                 workingHours
             });
-            
+
             Swal.fire({
                 title: 'Ajuste Actualizado',
                 text: 'La configuración de su agenda ha sido guardada.',
@@ -135,7 +138,7 @@ export default function ProfessionalSchedule() {
                 timer: 3000,
                 timerProgressBar: true
             });
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: 'Error',
                 text: 'No se pudo actualizar la configuración.',
@@ -146,7 +149,7 @@ export default function ProfessionalSchedule() {
     };
 
     const updateWorkingHour = (day: number, start: string, end: string, action: 'add' | 'update' | 'remove', index?: number) => {
-        let newWh = [...workingHours];
+        const newWh = [...workingHours];
         if (action === 'add') {
             newWh.push({ dayOfWeek: day, startTime: start, endTime: end });
         } else if (action === 'remove' && index !== undefined) {
@@ -154,7 +157,7 @@ export default function ProfessionalSchedule() {
         } else if (action === 'update' && index !== undefined) {
             newWh[index] = { dayOfWeek: day, startTime: start, endTime: end };
         }
-        
+
         setWorkingHours(newWh);
     };
 
@@ -170,7 +173,7 @@ export default function ProfessionalSchedule() {
             wh.push({ dayOfWeek: day, startTime: '08:00:00', endTime: '12:00:00' });
             wh.push({ dayOfWeek: day, startTime: '16:00:00', endTime: '20:00:00' });
         }
-        
+
         setWorkingHours(wh);
     };
 
@@ -195,8 +198,9 @@ export default function ProfessionalSchedule() {
                 icon: 'success',
                 confirmButtonColor: '#6366f1'
             });
-        } catch (error: any) {
-            const errorMsg = error.response?.data?.message || 'Error al bloquear el horario.';
+        } catch (error: unknown) {
+            const err = error as { response?: { data?: { message?: string } } };
+            const errorMsg = err.response?.data?.message || 'Error al bloquear el horario.';
             Swal.fire({ title: 'Error', text: errorMsg, icon: 'error' });
         } finally {
             setLoading(false);
@@ -217,7 +221,7 @@ export default function ProfessionalSchedule() {
             await api.put(`/appointments/${id}/cancel`);
             fetchBlocks();
             Swal.fire({ title: 'Eliminado', icon: 'success' });
-        } catch (error) {
+        } catch {
             Swal.fire({ title: 'Error', icon: 'error' });
         }
     };
@@ -240,11 +244,11 @@ export default function ProfessionalSchedule() {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm border-t-4 border-t-indigo-500">
                         <h2 className="text-xl font-black text-slate-800 tracking-tight mb-6">Configuración General</h2>
-                        
+
                         <div className="space-y-6">
                             <div>
                                 <label className="block text-sm font-bold text-slate-700 mb-2">Duración de cada turno</label>
-                                <select 
+                                <select
                                     value={appointmentDuration}
                                     onChange={(e) => setAppointmentDuration(parseInt(e.target.value))}
                                     className="w-full p-3 rounded-xl bg-slate-50 border border-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 font-medium"
@@ -310,17 +314,17 @@ export default function ProfessionalSchedule() {
                                                     const globalIdx = workingHours.indexOf(wh);
                                                     return (
                                                         <div key={idx} className="flex items-center gap-3 bg-white p-2 px-3 rounded-xl border border-slate-100 shadow-sm w-fit">
-                                                            <input 
-                                                                type="time" 
-                                                                value={wh.startTime.substring(0,5)} 
-                                                                onChange={(e) => updateWorkingHour(day.id, e.target.value+':00', wh.endTime, 'update', globalIdx)}
+                                                            <input
+                                                                type="time"
+                                                                value={wh.startTime.substring(0, 5)}
+                                                                onChange={(e) => updateWorkingHour(day.id, e.target.value + ':00', wh.endTime, 'update', globalIdx)}
                                                                 className="outline-none font-bold text-slate-700 bg-transparent"
                                                             />
                                                             <span className="text-slate-300">-</span>
-                                                            <input 
-                                                                type="time" 
-                                                                value={wh.endTime.substring(0,5)} 
-                                                                onChange={(e) => updateWorkingHour(day.id, wh.startTime, e.target.value+':00', 'update', globalIdx)}
+                                                            <input
+                                                                type="time"
+                                                                value={wh.endTime.substring(0, 5)}
+                                                                onChange={(e) => updateWorkingHour(day.id, wh.startTime, e.target.value + ':00', 'update', globalIdx)}
                                                                 className="outline-none font-bold text-slate-700 bg-transparent"
                                                             />
                                                             <button onClick={() => updateWorkingHour(day.id, '', '', 'remove', globalIdx)} className="ml-2 text-rose-400 hover:text-rose-600">
@@ -331,7 +335,7 @@ export default function ProfessionalSchedule() {
                                                 })
                                             )}
                                         </div>
-                                        <button 
+                                        <button
                                             onClick={() => updateWorkingHour(day.id, '08:00:00', '12:00:00', 'add')}
                                             className="mt-3 text-xs font-bold text-indigo-600 flex items-center gap-1 hover:text-indigo-800"
                                         >
@@ -408,7 +412,7 @@ export default function ProfessionalSchedule() {
                                 <div key={block.id} className="group bg-slate-50 p-5 rounded-2xl border border-slate-100 flex justify-between items-center">
                                     <div className="flex items-center gap-4">
                                         <div className="w-10 h-10 bg-white rounded flex items-center justify-center text-slate-400 shadow-sm">
-                                            <Calendar className="w-5 h-5"/>
+                                            <Calendar className="w-5 h-5" />
                                         </div>
                                         <div>
                                             <p className="font-black text-slate-800 capitalize">{format(localDate, "EEEE d 'de' MMMM", { locale: es })}</p>
@@ -416,7 +420,7 @@ export default function ProfessionalSchedule() {
                                         </div>
                                     </div>
                                     <button onClick={() => handleDeleteBlock(block.id)} className="p-2 text-rose-500 bg-rose-50 rounded-lg hover:bg-rose-100 transition-colors">
-                                        <Trash2 className="w-5 h-5"/>
+                                        <Trash2 className="w-5 h-5" />
                                     </button>
                                 </div>
                             )

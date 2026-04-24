@@ -25,6 +25,7 @@ export default function PatientHistory() {
 
     useEffect(() => {
         fetchAppointments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const fetchAppointments = async () => {
@@ -86,7 +87,7 @@ export default function PatientHistory() {
                 icon: 'success',
                 confirmButtonColor: '#10b981'
             });
-        } catch (error) {
+        } catch {
             Swal.fire({
                 title: 'Error',
                 text: 'Error al cancelar el turno',
@@ -212,7 +213,7 @@ export default function PatientHistory() {
                                     <div className="mb-4 flex justify-between items-start">
                                         {statusBadge(app.status)}
                                     </div>
-                                    
+
                                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                                         <div className="flex items-start sm:items-center gap-4 sm:gap-6 w-full md:w-auto min-w-0">
                                             <div className={`w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 rounded-2xl flex items-center justify-center transition-colors shadow-sm ${isUpcoming ? 'bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' : 'bg-slate-50 text-slate-400'}`}>

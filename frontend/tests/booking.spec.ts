@@ -10,7 +10,7 @@ test.describe('Appointment Booking Flow', () => {
     await page.fill('input[name="email"]', 'paciente@turnos.com');
     await page.fill('input[name="password"]', '123');
     await page.click('button[type="submit"]');
-    
+
     // Check we are in dashboard
     await expect(page).toHaveURL(/\/patient\/dashboard/);
   });
@@ -24,7 +24,7 @@ test.describe('Appointment Booking Flow', () => {
     // We wait for the select to be filled with data from the API
     const specialtySelect = page.locator('select').first();
     await expect(specialtySelect).not.toBeDisabled();
-    
+
     // Select "Osteopatía" (from seeder)
     await specialtySelect.selectOption({ label: 'Osteopatía' });
 
@@ -37,8 +37,9 @@ test.describe('Appointment Booking Flow', () => {
     const tomorrow = addDays(new Date(), 1);
     // If tomorrow is Sunday, use Monday
     if (tomorrow.getDay() === 0) tomorrow.setDate(tomorrow.getDate() + 1);
+    await page.fill('input[name="appointmentDate"]', format(tomorrow, 'yyyy-MM-dd'));
     const dateStr = format(tomorrow, 'yyyy-MM-dd');
-    
+
     const dateInput = page.locator('input[type="date"]');
     await dateInput.fill(dateStr);
 
@@ -46,7 +47,6 @@ test.describe('Appointment Booking Flow', () => {
     // Wait for slots to load
     const slotButton = page.locator('button:has-text(":")').first();
     await expect(slotButton).toBeVisible({ timeout: 10000 });
-    const slotText = await slotButton.innerText();
     await slotButton.click();
 
     // 7. Confirm

@@ -13,7 +13,7 @@ const ForgotPassword = () => {
     try {
       const response = await api.post('/auth/forgot-password', { email });
       setMessage(response.data.message);
-    } catch (error) {
+    } catch {
       setMessage('Error al procesar la solicitud.');
     } finally {
       setLoading(false);
