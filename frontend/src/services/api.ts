@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5005/api',
+    baseURL: `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}/api`,
     headers: {
         'Content-Type': 'application/json',
     },
@@ -20,7 +20,7 @@ api.interceptors.response.use(
     (error) => {
         // No redirigir si el error es de login (para permitir mostrar error de credenciales)
         const isLoginRequest = error.config?.url?.includes('/auth/login');
-        
+
         if (error.response?.status === 401 && !isLoginRequest) {
             localStorage.removeItem('token');
             window.location.href = '/login';
@@ -28,5 +28,9 @@ api.interceptors.response.use(
         return Promise.reject(error);
     }
 );
+
+export const getImageUrl = (path: string) => {
+    return `${import.meta.env.VITE_API_URL || 'http://localhost:5005'}${path}`;
+};
 
 export default api;

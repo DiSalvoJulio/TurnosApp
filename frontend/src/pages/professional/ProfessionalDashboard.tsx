@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Clock, BookOpen, ChevronRight, User } from 'lucide-react';
+import { getImageUrl } from '../../services/api';
 
 export default function ProfessionalDashboard() {
     const navigate = useNavigate();
@@ -56,7 +57,7 @@ export default function ProfessionalDashboard() {
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover:text-indigo-600 transition-colors">Perfil</span>
                     <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-100 rounded-2xl overflow-hidden border-4 border-white shadow-lg group-hover:scale-105 transition-all">
                         {localStorage.getItem('profilePictureUrl') ? (
-                            <img src={`http://localhost:5005${localStorage.getItem('profilePictureUrl')}`} className="w-full h-full object-cover" />
+                            <img src={getImageUrl(localStorage.getItem('profilePictureUrl')!)} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300">
                                 <User className="w-8 h-8 md:w-10 md:h-10" />

@@ -6,8 +6,8 @@
 
 # Test info
 
-- Name: login.spec.ts >> Login Flow >> should show error on invalid credentials
-- Location: tests\login.spec.ts:12:3
+- Name: login.spec.ts >> Login Flow >> should show login form
+- Location: tests\login.spec.ts:4:3
 
 # Error details
 
@@ -26,15 +26,15 @@ Call log:
   3  | test.describe('Login Flow', () => {
   4  |   test('should show login form', async ({ page }) => {
   5  |     // Note: This expects the dev server to be running on 5173
-  6  |     await page.goto('http://localhost:5173/login');
+> 6  |     await page.goto('http://localhost:5173/login');
+     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/login
   7  |     
   8  |     await expect(page.locator('h3')).toContainText('Bienvenido de nuevo');
   9  |     await expect(page.locator('button:has-text("Soy Paciente")')).toBeVisible();
   10 |   });
   11 | 
   12 |   test('should show error on invalid credentials', async ({ page }) => {
-> 13 |     await page.goto('http://localhost:5173/login');
-     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/login
+  13 |     await page.goto('http://localhost:5173/login');
   14 |     await page.click('text=Soy Paciente');
   15 |     
   16 |     await page.fill('input[name="email"]', 'wrong@user.com');

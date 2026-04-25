@@ -42,7 +42,26 @@ export default defineConfig([
   },
 ])
 ```
+## Deployment
 
+### Vercel Deployment
+
+1. **Environment Variables**: Copy `.env.example` to `.env` and configure:
+   ```
+   VITE_API_URL=https://your-backend-url.onrender.com
+   ```
+
+2. **Deploy to Vercel**:
+   - Connect your GitHub repository to Vercel
+   - Set the build command: `npm run build`
+   - Set the output directory: `dist`
+   - Add environment variable `VITE_API_URL` in Vercel dashboard
+
+3. **Build Configuration**:
+   - Framework Preset: Vite
+   - Root Directory: `frontend/` (if deploying from monorepo)
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
 You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
 ```js
