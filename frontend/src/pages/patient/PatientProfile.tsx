@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { Button } from '../../components/ui/Button';
 import Swal from 'sweetalert2';
 import { User, Save, MapPin, Phone, Mail, CreditCard, ChevronLeft, CheckCircle, AlertCircle, Shield, Fingerprint, Calendar, Lock, Eye, EyeOff, Edit3, X, Camera } from 'lucide-react';
@@ -216,7 +216,7 @@ export default function PatientProfile() {
                         <div className="w-32 h-32 bg-emerald-50 text-emerald-600 rounded-[2.5rem] flex items-center justify-center shadow-inner overflow-hidden border-4 border-white shadow-xl">
                             {profile.profilePictureUrl ? (
                                 <img
-                                    src={`http://localhost:5005${profile.profilePictureUrl}`}
+                                    src={getImageUrl(profile.profilePictureUrl)}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />

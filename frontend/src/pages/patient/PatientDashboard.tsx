@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { format, parseISO, isFuture } from 'date-fns';
 import { es } from 'date-fns/locale';
-import api from '../../services/api';
+import api, { getImageUrl } from '../../services/api';
 import { CalendarDays, User, PlusCircle, ChevronRight, Calendar, Clock } from 'lucide-react';
 
 
@@ -110,7 +110,7 @@ export default function PatientDashboard() {
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-300 group-hover:text-indigo-600 transition-colors">Perfil</span>
                     <div className="w-24 h-24 bg-slate-100 rounded-[2rem] overflow-hidden border-4 border-white shadow-xl group-hover:scale-105 transition-all">
                         {localStorage.getItem('profilePictureUrl') ? (
-                            <img src={`http://localhost:5005${localStorage.getItem('profilePictureUrl')}`} className="w-full h-full object-cover" />
+                            <img src={getImageUrl(localStorage.getItem('profilePictureUrl')!)} className="w-full h-full object-cover" />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center text-slate-300">
                                 <User className="w-12 h-12" />

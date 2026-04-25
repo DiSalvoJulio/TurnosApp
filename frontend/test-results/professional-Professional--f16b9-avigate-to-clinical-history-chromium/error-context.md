@@ -12,62 +12,10 @@
 # Error details
 
 ```
-Test timeout of 30000ms exceeded while running "beforeEach" hook.
-```
-
-```
-Error: page.fill: Test timeout of 30000ms exceeded.
+Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/login
 Call log:
-  - waiting for locator('input[name="email"]')
+  - navigating to "http://localhost:5173/login", waiting until "load"
 
-```
-
-# Page snapshot
-
-```yaml
-- generic [ref=e7]:
-  - generic [ref=e8]:
-    - generic [ref=e10]:
-      - generic [ref=e11]:
-        - img [ref=e13]
-        - generic [ref=e15]: TurnosApp
-      - heading "Tu salud, organizada." [level=2] [ref=e16]:
-        - text: Tu salud,
-        - text: organizada.
-      - paragraph [ref=e17]: Gestioná tus citas médicas con la plataforma más avanzada y sencilla del mercado.
-    - generic [ref=e18]:
-      - generic [ref=e19]:
-        - img [ref=e21]
-        - img [ref=e25]
-        - img [ref=e29]
-        - img [ref=e33]
-        - generic [ref=e36]: +2k
-      - paragraph [ref=e37]: Confiado por profesionales
-  - generic [ref=e39]:
-    - button "Volver atrás" [ref=e40]:
-      - img [ref=e41]
-      - text: Volver atrás
-    - generic [ref=e43]:
-      - img [ref=e45]
-      - heading "Acceso Profesional" [level=3] [ref=e47]
-      - paragraph [ref=e48]: Ingresá tus credenciales para continuar
-    - generic [ref=e49]:
-      - generic [ref=e50]:
-        - text: Correo o DNI
-        - generic [ref=e51]:
-          - img [ref=e52]
-          - textbox "ejemplo@correo.com" [ref=e55]: juanperez@turnos.com
-      - generic [ref=e56]:
-        - text: Contraseña
-        - generic [ref=e57]:
-          - img [ref=e58]
-          - textbox "••••••••" [ref=e61]: "123"
-      - button "Iniciar Sesión" [ref=e62]
-    - generic [ref=e63]:
-      - paragraph [ref=e64]:
-        - text: ¿Aún no tenés cuenta?
-        - button "Registrate ahora" [ref=e65]
-      - button "¿Olvidaste tu contraseña? Recuperar ahora" [ref=e67]
 ```
 
 # Test source
@@ -78,10 +26,10 @@ Call log:
   3  | test.describe('Professional Portal Flow', () => {
   4  |   test.beforeEach(async ({ page }) => {
   5  |     // Login as professional
-  6  |     await page.goto('/login');
+> 6  |     await page.goto('/login');
+     |                ^ Error: page.goto: net::ERR_CONNECTION_REFUSED at http://localhost:5173/login
   7  |     await page.click('text=Soy Profesional');
-> 8  |     await page.fill('input[name="email"]', 'juanperez@turnos.com');
-     |                ^ Error: page.fill: Test timeout of 30000ms exceeded.
+  8  |     await page.fill('input[name="email"]', 'juanperez@turnos.com');
   9  |     await page.fill('input[name="password"]', '123');
   10 |     await page.click('button[type="submit"]');
   11 |     
