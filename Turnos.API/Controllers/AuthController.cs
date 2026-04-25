@@ -8,20 +8,29 @@ using Turnos.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Turnos.Core.Entities;
 using System.Linq;
+using Microsoft.Extensions.Configuration;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Turnos.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[AllowAnonymous]
 public class AuthController : ControllerBase
 {
     private readonly ApplicationDbContext _context;
     private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
-    public AuthController(ApplicationDbContext context, IEmailService emailService)
+    public AuthController(ApplicationDbContext context, IEmailService emailService, IConfiguration configuration)
     {
         _context = context;
         _emailService = emailService;
+        _configuration = configuration;
     }
 
     [HttpPost("forgot-password")]
@@ -106,7 +115,50 @@ public class AuthController : ControllerBase
             profileId = prof?.UserId;
         }
 
-        var token = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes($"{user.Id}:{user.Role}"));
+        // var jwtKey = _configuration["JWT__Key"] ?? _configuration["Jwt:Key"] ?? "TurnosDevSecretKey1234567890";
+        // var jwtIssuer = _configuration["JWT__Issuer"] ?? _configuration["Jwt:Issuer"] ?? "TurnosApi";
+        // var jwtAudience = _configuration["JWT__Audience"] ?? _configuration["Jwt:Audience"] ?? "TurnosClient";
+        var jwtKey = _configuration["Jwt:Key"];
+        var jwtIssuer = _configuration["Jwt:Issuer"];
+        var jwtAudience = _configuration["Jwt:Audience"];
+        
+
+        if (string.IsNullOrEmpty(jwtKey))
+        {
+            throw new Exception("JWT Key no configurada");
+        }
+        if (string.IsNullOrEmpty(jwtIssuer))
+        {
+            throw new Exception("JWT Issuer no configurado");
+        }
+        if (string.IsNullOrEmpty(jwtAudience))
+        {
+            throw new Exception("JWT Audience no configurado");
+        }
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Role, user.Role),
+            new Claim("role", user.Role)
+        };
+
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(claims),
+            Expires = DateTime.UtcNow.AddHours(8),
+            Issuer = jwtIssuer,
+            Audience = jwtAudience,
+            SigningCredentials = creds
+        };
+
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var jwtToken = tokenHandler.CreateToken(tokenDescriptor);
+        var token = tokenHandler.WriteToken(jwtToken);
 
         return Ok(new AuthResponse
         {
